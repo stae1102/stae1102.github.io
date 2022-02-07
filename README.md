@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # plainwhite
 
 Simplistic jekyll portfolio-style theme for writers.
@@ -220,3 +221,6 @@ The theme is available as open source under the terms of the [MIT License](https
 ## More themes
 
 - [Texture](https://github.com/samarsault/texture)
+=======
+# stae1102.github.io
+>>>>>>> 8bfcb27f34846e93bbc607737c933a6b7d59669f
