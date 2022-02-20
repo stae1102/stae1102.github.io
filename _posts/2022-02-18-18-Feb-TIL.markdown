@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "2 Feb TIL: HTML문법 및 서버 개설"
+title:  "18 Feb TIL: HTML문법 및 서버 개설"
 excerpt: "TIL"
 date:   2022-02-18 14:26:00 +0900
 categories: 
