@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "23 Feb TIL: js 조건문, 반복문"
+title:  "24 Feb TIL: js 조건문, 반복문"
 excerpt: "js 조건문, 반복문"
 date:   2022-02-24 16:22:00 +0900
 categories: 
