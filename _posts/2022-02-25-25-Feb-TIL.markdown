@@ -1,7 +1,7 @@
 ---
 layout: post
-title:  "25 Feb TIL: js 함수(익명함수 등)"
-excerpt: "js 함수(익명함수 등)"
+title:  "25 Feb TIL: js 함수(익명함수 등), SQL 기본 SELECT 문"
+excerpt: "js 함수(익명함수 등), SQL SELECT"
 date:   2022-02-25 19:00:00 +0900
 categories: 
   - Study
