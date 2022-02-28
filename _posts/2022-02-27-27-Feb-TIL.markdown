@@ -2,7 +2,7 @@
 layout: post
 title:  "27 Feb TIL: Git 5가지 기능, js 배열, Node.js 개념"
 excerpt: "Git-amend, cherry-pick, reset, revert, stash & js Array & Node.js basic concept"
-date:   2022-02-26 23:41:00 +0900
+date:   2022-02-27 23:41:00 +0900
 categories: 
   - Study
 tags:
