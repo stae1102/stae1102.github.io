@@ -1,8 +1,8 @@
 ---
 layout: post
-title:  "29 Feb TIL: SQL 조인, JS 폼, JS ES6+ 변경사항"
+title:  "01 Mar TIL: SQL 조인, JS 폼, JS ES6+ 변경사항"
 excerpt: "SQL Join, JS form element, JS ES6+ changed things"
-date:   2022-02-29 23:41:00 +0900
+date:   2022-03-01 23:41:00 +0900
 categories: 
   - Study
 tags:
