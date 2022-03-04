@@ -17,7 +17,7 @@ remote_theme: "mmistakes/so-simple-theme@3.2.0"
 skin: "/assets/css/skins/default.css"
 locale: en-US
 title: "밑바닥부터 시작하는 개발자"
-description: "It really is the best."
+description: "const dream = require('./future')"
 baseurl: # the subpath of your site, e.g. "/blog"
 url: "https://stae1102.github.io/"
 logo: "/images/The Girl with a Pearl Earring.jpg"
