@@ -30,9 +30,17 @@ layout: default
           {% include social-share.html %}
         {% endif %}
 
-        {% if site.disqus.shortname %}
+        <!-- {% if site.disqus.shortname %}
           {% include disqus-comments.html %}
-        {% endif %}
+        {% endif %} -->
+        <!-- utterances comment-->
+        <script src="https://utteranc.es/client.js"
+                repo="stae1102/stae1102.github.io"
+                issue-term="pathname"
+                theme="github-light"
+                crossorigin="anonymous"
+                async>
+        </script>
 
         {% include page-pagination.html %}
       </div>
