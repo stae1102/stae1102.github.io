@@ -2,7 +2,7 @@
 layout: post
 title:  "05 Mar TIL: NodeJS 내장객체, 동기, 비동기 메서드"
 excerpt: "NodeJS inner object, sync-async method"
-date:   2022-03-04 17:27:00 +0900
+date:   2022-03-05 17:27:00 +0900
 categories: 
   - Study
 tags:
