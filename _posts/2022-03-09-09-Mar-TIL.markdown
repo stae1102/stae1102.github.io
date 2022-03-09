@@ -146,10 +146,12 @@ html을 그대로 사용해도 되며, 넌적스임을 구분하려면 확장자
 res.render 호출 시 보내는 변수를 넌적스가 처리한다.
 
 ```
+{% raw %}
 <h1>{{title}}</h1>
 <p>Welcome to {{title}}</p>
 <button class="{{title}}" type="submit">전송</button>
 <input placeholder="{{title}} 연습" />
+{% endraw %}
 ```
 * 넌적스에서는 변수는 `{{ }}`로 감싼다.
 
