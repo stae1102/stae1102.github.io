@@ -149,106 +149,27 @@ res.render 호출 시 보내는 변수를 넌적스가 처리한다.
 
 * 내부에 변수를 사용할 수도 있다. 변수를 선언할 때는 아래와 같이 사용한다.
 
-```html
-{% set node = 'Node.js' %}
-{% set js = 'Javascript' %}
-<p>{{node}}와 {{js}}</p>
-```
-
 HTML을 이스케이프하고 싶지 않다면 아래와 같이 변수명 | safe 를 사용한다.
-
-```html
-<p>{{'<strong>이스케이프</strong>'}}</p>
-// <p>&lt;strong&gt;이스케이프&lt;/strong&gt;</p>
-<p>{{'<strong>이스케이프 하지 않음</strong>' | safe }}</p>
-// <p><strong>이스케이프 하지 않음</strong></p>
-```
 
 ### 6.5.2.2 반복문
 
 넌적스에서는 특수한 구문을 {% %} 안에 쓴다. 따라서 반복문도 이 안에 넣으면 된다. `for in`문과  `end for` 사이에 위치한다.
 
-```html
-<ul>
-    {% set fruits = ['사과', '배', '오렌지', '바나나', '복숭아'] %}
-    {% for item in fruits %}
-    <li>{{item}}</li>
-    {% endfor %}
-</ul>
-```
-
 반복문에서 인덱스를 사용하고 싶을 때는 loop.index라는 변수를 사용한다.
-
-```html
-<ul>
-    {% set fruits = ['사과', '배', '오렌지', '바나나', '복숭아'] %}
-    {% for item in fruits %}
-    <li>{{loop.index}}번째 {{item}}</li>
-    {% endfor %}
-</ul>
-```
 
 ### 6.5.2.3 조건문
 
-```html
-{% if isLoggedIn %}
-<div>로그인 되었습니다.</div>
-{% else %}
-<div>로그인이 필요합니다.</div>
-{% end if %}
-```
-
 case문은 없지만 elif를 통해 분기처리할 수 있다.
 
-```html
-{% if fruit === 'apple' %}
-<p>사과입니다.</p>
-{% elif fruit === 'banana' %}
-<p>바나나입니다.</p>
-{% elif fruit === 'orange' %}
-<p>오렌지입니다.</p>
-{% else %}
-<p>사과도 바나나도 오렌지도 아닙니다.</p>
-{% end if %}
-```
-
 중괄호 안에는 다음과 같이 사용한다.
-
-```html
-<div>{{'참' if isLoggedIn}}</div>
-<div>{{'참' if isLoggedIn else '거짓'}}</div>
-```
 
 ### 6.5.2.4 include
 
 다른 html 파일을 넣을 수 있다. 헤더나 푸터, 내비게이션 등을 따로 관리할 수 있어 번거롭지 않다. `include 파일경로`로 사용
 
-```html
-{% include "header.html" %}
-<main>
-    <h1>메인 파일</h1>
-    <p>다른 파일을 include할 수 있습니다.</p>
-</main>
-{% include "footer.html" %}
-```
-
 ### 6.5.2.5 extends와 block
 
 레이아읏을 정할 수 있다. 공통되는 레이아웃 부분을 따로 관리할 수 있어서 좋다.
-
-```html
-{% extends 'layout.html' %}
-
-{% block content %}
-<main>
-    <p>내용입니다.</p>
-</main>
-{% endblock %}
-
-{% block script %}
-<script src="/main.js"></script>
-{% endblock %}
-```
 
 레이아웃이 될 파일에는 공통된 마크업을 넣되, 페이지마다 달라지는 부분을 block으로 비워둔다.
 
