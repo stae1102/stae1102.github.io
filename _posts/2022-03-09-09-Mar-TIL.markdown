@@ -2,7 +2,7 @@
 layout: post
 title: "09 Mar TIL: Nodejs 넌적스, 데이터베이스, CRUD, 시퀄라이즈"
 excerpt: "nodejs nunjucks, database, CRUD, Sequelize"
-date: 2022-03-08 21:09:00 +0900
+date: 2022-03-09 21:09:00 +0900
 categories:
   - Study
 tags:
