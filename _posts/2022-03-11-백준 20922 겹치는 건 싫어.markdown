@@ -1,0 +1,142 @@
+---
+layout: post
+title: "백준: 20922 겹치는 건 싫어"
+excerpt: "Python, Two_pointer"
+date: 2022-03-11 22:42:00 +0900
+categories:
+  - Solve
+tags:
+  - Two_pointer
+---
+
+# 문제
+
+홍대병에 걸린 도현이는 겹치는 것을 매우 싫어한다. 특히 수열에서 같은 원소가 여러 개 들어 있는 수열을 싫어한다. 도현이를 위해 같은 원소가 $K$개 이하로 들어 있는 최장 연속 부분 수열의 길이를 구하려고 한다.
+
+$100\,000$ 이하의 양의 정수로 이루어진 길이가 $N$인 수열이 주어진다.  이 수열에서 같은 정수를 $K$개 이하로 포함한 최장 연속 부분 수열의 길이를 구하는 프로그램을 작성해보자.
+
+# 입력
+
+첫째 줄에 정수 $N$ ($1 \le N \le 200\,000$)과 $K$ ($1 \le K \le 100$)가 주어진다.
+
+둘째 줄에는 ${a_1, a_2, ... a_n}$이 주어진다 ($1 \le a_i \le 100\,000$)
+
+# 출력
+
+조건을 만족하는 최장 연속 부분 수열의 길이를 출력한다.
+
+# 문제 풀이
+
+## 아이디어
+
+투 포인터를 사용하는 문제 중 정석적인 문제. 포인터로 수를 세어가면서 조건에 맞도록 최대한 늘리는 것이 중요하다.
+
+투 포인터의 핵심은 right 포인터가 오른쪽으로 가면 갈 수록 길이나 값이 커지고 left 포인터가 오른쪽으로 갈 수록 길이나 값이 작아진다는 것이다(단, 모든 값이 양수일 때).
+
+이처럼 연속 부분 수열을 최대로 하기 위해서는 계속해서 right를 증가시켜 나가도록 한다.
+
+만약 right가 전진하다가 연속 상한치를 만났을 때, left를 증가시키는 것이다. left가 전진하면서 상한치가 풀렸을 때 다시 right를 증가시킨다.
+
+또한, max로 최댓값을 계속해서 갱신시키는 것도 필요하다.
+
+## 코드 분석
+
+### 전체 코드
+
+```python
+import sys
+input = sys.stdin.readline
+
+n, m = map(int, input().split())
+
+array = [0] * (n + 1)
+array[1:] = list(map(int, input().split()))
+
+# counting 변수 생성
+count = [0] * 100001
+length = 0
+
+# [left, right]로 구역을 설정.
+# right를 1씩 늘려가다가 카운트가 m을 넘어서면 left를 늘려감.
+# 매번 max를 갱신함
+
+left, right = 1, 1
+while left <= right and right <= n:
+    while (right <= n and count[array[right]] <= k):
+        if count[array[right]] == k:
+            break
+        count[array[right]] += 1
+        length = max(length, right - left + 1)
+        right += 1
+    
+    while left < right:
+        if (count[array[left]] == k):
+            count[array[left]] -= 1
+            left += 1
+            break
+
+        count[array[left]] -= 1
+        left += 1
+
+print(length)
+```
+
+### 1. 변수 설정
+
+```python
+import sys
+input = sys.stdin.readline
+
+n, m = map(int, input().split())
+
+array = [0] * (n + 1)
+array[1:] = list(map(int, input().split()))
+
+# counting 변수 생성
+count = [0] * 100001
+length = 0
+```
+
+`sys.stdin.readline`으로 받으면서 소요시간을 최대한 단축시키고, 문제의 입력대로 길이를 n으로 받고, 같은 원소의 상한치를 k로 받는다.
+
+인덱스는 0 부터 시작하기 때문에 혼돈을 피하기 위해 array와 count는 0 을 포함해서 리스트를 초기화했다.
+
+또한, 수열의 최댓값이 100,000이기 때문에 count 변수의 원소의 갯수를 100,001로 설정했다.
+
+length는 길이를 저장할 변수이다.
+
+### 2. 투 포인터
+
+```python
+...
+left, right = 1, 1
+while left <= right and right <= n:
+    while (right <= n and count[array[right]] <= k):
+        if count[array[right]] == k:
+            break
+        count[array[right]] += 1
+        length = max(length, right - left + 1)
+        right += 1
+        ...
+```
+left가 right보다 작은 동시에 끝까지 도달하도록 while문을 작성하고, **right가 먼저 전진**하도록 설정한다. 또한, right 포인터가 가리키는 수인 array[right]를 count에서 검색하여 k보다 작을 때 반복하도록 설정한다.
+
+이때, right가 가리키는 수가 최대 상한치를 도달하였을 때 멈추고 반복문을 탈출한다. 그렇지 않다면 길이가 증가했다는 것이기 때문에 length를 max 함수를 통해 최대화한다. 그 이후 다시 right가 전진한다.
+
+```python
+    ...
+    while left < right:
+        if (count[array[left]] == k):
+            count[array[left]] -= 1
+            left += 1
+            break
+
+        count[array[left]] -= 1
+        left += 1
+        ...
+```
+이번에는 left를 전진시킨다. left가 가리키는 수가 상한치를 벗어나기 전까지 계속해서 전진하도록 설정하였다. 그러다가 상한치를 딱 만족시키기 시작하면 비로소 left의 전진을 그만두고 right가 전진하도록 한다.
+
+# 제출
+
+![20922](./result_images/20922.PNG)
