@@ -4,7 +4,7 @@ title: "백준: 20922 겹치는 건 싫어"
 excerpt: "Python, Two_pointer"
 date: 2022-03-11 22:42:00 +0900
 categories:
-  - Solve
+  - Baekjoon
 tags:
   - Two_pointer
 ---

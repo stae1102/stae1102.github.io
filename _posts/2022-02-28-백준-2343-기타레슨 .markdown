@@ -4,9 +4,9 @@ title:  "백준 2343 기타레슨"
 excerpt: "이분 탐색"
 date:   2022-02-28 23:16:00 +0900
 categories: 
-  - test
+  - Baekjoon
 tags:
-  - Coding-test
+  - binary_search
 ---
 
 # 문제
