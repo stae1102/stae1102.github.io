@@ -132,14 +132,14 @@ start, end, curr = 0, 0, 0
 result = 100001
 
 while True:
-    if temp >= s:
+    if curr >= m:
         result = min(result, end - start)
-        temp -= arr[start]
+        curr -= arr[start]
         start += 1
-    elif end == N:
+    elif end == n:
         break
     else:
-        temp += arr[end]
+        curr += arr[end]
         end += 1
 
 if result == 100001:
