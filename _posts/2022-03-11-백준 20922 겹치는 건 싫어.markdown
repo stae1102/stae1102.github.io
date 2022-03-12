@@ -150,4 +150,4 @@ left가 right보다 작은 동시에 끝까지 도달하도록 while문을 작�
 
 # 제출
 
-![20922]((https://github.com/stae1102/stae1102.github.io/blob/main/_posts/result_images/20922.PNG?raw=true))
+![20922](https://user-images.githubusercontent.com/83271772/158020108-49c96c5c-d6f3-4495-a2d7-e5234054f568.PNG)
