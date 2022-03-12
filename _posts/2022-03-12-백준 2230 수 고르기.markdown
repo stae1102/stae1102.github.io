@@ -156,3 +156,5 @@ print(result)
 # 총평
 
 투 포인터를 입문하기에 딱 적당한 문제인 것 같다.
+
+![2230](https://user-images.githubusercontent.com/83271772/158020174-866d1d21-bca6-4814-9699-d49135a3e2f7.PNG)
