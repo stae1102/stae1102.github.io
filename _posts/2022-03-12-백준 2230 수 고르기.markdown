@@ -1,0 +1,158 @@
+---
+layout: post
+title: "백준: 2230 수 고르기"
+excerpt: "Python, Two_pointer"
+date: 2022-03-12 22:00:00 +0900
+categories:
+  - Baekjoon
+tags:
+  - Two_pointer
+---
+
+- [문제](#문제)
+- [입력](#입력)
+- [출력](#출력)
+- [제한](#제한)
+- [문제풀이](#문제풀이)
+  - [A. 아이디어](#a-아이디어)
+  - [B. 코드 분석](#b-코드-분석)
+    - [전체 코드](#전체-코드)
+    - [B-1. 변수 설정](#b-1-변수-설정)
+    - [B-2. 포인터 부분](#b-2-포인터-부분)
+  - [C. 개선 코드(셀프)](#c-개선-코드셀프)
+- [총평](#총평)
+
+# 문제
+
+N개의 정수로 이루어진 수열 A[1], A[2], …, A[N]이 있다. 이 수열에서 두 수를 골랐을 때(같은 수일 수도 있다), 그 차이가 M 이상이면서 제일 작은 경우를 구하는 프로그램을 작성하시오.
+
+예를 들어 수열이 {1, 2, 3, 4, 5}라고 하자. 만약 M = 3일 경우, 1 4, 1 5, 2 5를 골랐을 때 그 차이가 M 이상이 된다. 이 중에서 차이가 가장 작은 경우는 1 4나 2 5를 골랐을 때의 3이 된다.
+
+# 입력
+
+첫째 줄에 두 정수 N, M이 주어진다. 다음 N개의 줄에는 차례로 A[1], A[2], …, A[N]이 주어진다.
+
+# 출력
+
+첫째 줄에 M 이상이면서 가장 작은 차이를 출력한다. 항상 차이가 M이상인 두 수를 고를 수 있다.
+
+# 제한
+
+* 1 ≤ N ≤ 100,000
+
+* 0 ≤ M ≤ 2,000,000,000
+
+* 0 ≤ |A[i]| ≤ 1,000,000,000
+
+# 문제풀이
+
+## A. 아이디어
+
+투 포인터의 
+
+## B. 코드 분석
+
+### 전체 코드
+
+```python
+import sys
+import math
+input = sys.stdin.readline
+INF = math.inf
+
+n, m = map(int, input().split())
+
+arr = [int(input()) for _ in range(n)]
+arr.sort()
+
+end = 0
+diff = math.inf
+
+for i in range(n):
+    while end < n and (arr[end] - arr[i] < m):
+        end += 1
+    
+    if end < n:
+        diff = min(diff, arr[end] - arr[i])
+
+print(diff)
+```
+### B-1. 변수 설정
+
+```python
+import sys
+import math
+input = sys.stdin.readline
+INF = math.inf
+
+n, m = map(int, input().split())
+
+arr = [int(input()) for _ in range(n)]
+arr.sort()
+
+end = 0
+diff = math.inf
+```
+이번에는 end 포인터만 만들었다. start 포인터는 for로 인해서 자동으로 증가하도록 했다.
+
+또한, 수의 차이가 0 <= M <= 2,000,000,000 이기 때문에 그냥 math.inf로 큰 값을 설정하였다.
+
+### B-2. 포인터 부분
+
+```python
+for i in range(n):
+    while end < n and (arr[end] - arr[i] < m):
+        end += 1
+    
+    if end < n:
+        diff = min(diff, arr[end] - arr[i])
+
+print(diff)
+```
+
+`arr[end] - arr[i] < m`는 IndexError 에러가 발생해서 while문에서 and 뒤로 놓았다. 솔직히 이 방법보다는 다른 방법을 쓰는 게 더 안정적일 것 같다.
+
+## C. 개선 코드(셀프)
+
+```python
+import sys
+import math
+input = sys.stdin.readline
+INF = math.inf
+
+n, m = map(int, input().split())
+
+arr = []
+
+for _ in range(n):
+    arr.append(int(input()))
+
+arr.sort()
+
+start, end = 0, 1
+result = INF
+
+while start <= end < n:
+    diff = arr[end] - arr[start]
+    if diff >= m:
+        result = min(result, diff)
+        start += 1
+    else:
+        end += 1
+
+print(result)
+```
+
+* 문제 조건을 보면 두 개의 숫자가 같은 수일 수도 있다고 했다. 그래서 만약, m이 0으로 주어졌다면 start는 end랑 같을 수도 있다는 것이다. 따라서 while문의 조건으로 `start <= end`로 설정했다.
+
+* 매 반복마다 둘 간의 차이를 계산한다. 둘 간의 차이가 클 때는 start 포인터를 이동시켜 차이를 줄이다. 차이가 너무 줄어들면 end 포인터를 오른쪽으로 옮긴다.
+
+* 그러던 중 end가 n - 1까지 도달하였을 때, 두 가지 경우가 있다.
+  1. 조건을 충족하는 경우에는 start 포인터를 계속 이동시키면서 값을 줄여주며, 계속해서 줄어들다가 조건을 충족하지 못하거나 start가 n을 넘어서는 경우 반복문을 탈출한다.
+  2. 조건을 충족하지 못하는 경우 end 값이 추가되며 while의 조건을 불충족하여 탈출한다.
+
+코드가 훨씬 깔끔하고 가독성있게 변했다.
+
+# 총평
+
+투 포인터를 입문하기에 딱 적당한 문제인 것 같다.
