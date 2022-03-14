@@ -1,0 +1,145 @@
+---
+layout: post
+title: "백준: 10451 순열 사이클"
+excerpt: "Python, BFS"
+categories:
+  - Baekjoon
+tags:
+  - BFS
+---
+
+- [문제](#문제)
+- [입력](#입력)
+- [출력](#출력)
+- [문제풀이](#문제풀이)
+  - [A. 아이디어](#a-아이디어)
+  - [B. 코드 분석](#b-코드-분석)
+    - [전체 코드](#전체-코드)
+    - [B-1. 준비](#b-1-준비)
+    - [B-2. BFS 함수 정의](#b-2-bfs-함수-정의)
+    - [B-3. 테스트 케이스 순회](#b-3-테스트-케이스-순회)
+- [총평](#총평)
+
+# 문제
+
+1부터 N까지 정수 N개로 이루어진 순열을 나타내는 방법은 여러 가지가 있다. 예를 들어, 8개의 수로 이루어진 순열 (3, 2, 7, 8, 1, 4, 5, 6)을 배열을 이용해 표현하면  $\begin{pmatrix} 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 \\
+3 & 2 & 7 & 8 & 1 & 4 & 5 & 6 \end{pmatrix}$와 같다. 또는, Figure 1과 같이 방향 그래프로 나타낼 수도 있다.
+
+순열을 배열을 이용해  
+$\begin{pmatrix} 1 & \dots & i & \dots &n \\  \pi_1& \dots& \pi_i & \dots & \pi_n \end{pmatrix}$ 로 나타냈다면, i에서 πi로 간선을 이어 그래프로 만들 수 있다.
+
+Figure 1에 나와있는 것 처럼, 순열 그래프 (3, 2, 7, 8, 1, 4, 5, 6) 에는 총 3개의 사이클이 있다. 이러한 사이클을 "순열 사이클" 이라고 한다.
+
+N개의 정수로 이루어진 순열이 주어졌을 때, 순열 사이클의 개수를 구하는 프로그램을 작성하시오.
+
+![10451](https://www.acmicpc.net/upload/images2/permut.png)
+
+# 입력
+
+첫째 줄에 테스트 케이스의 개수 T가 주어진다. 각 테스트 케이스의 첫째 줄에는 순열의 크기 N (2 ≤ N ≤ 1,000)이 주어진다. 둘째 줄에는 순열이 주어지며, 각 정수는 공백으로 구분되어 있다.
+
+# 출력
+
+각 테스트 케이스마다, 입력으로 주어진 순열에 존재하는 순열 사이클의 개수를 출력한다.
+
+# 문제풀이
+
+## A. 아이디어
+
+사이클이라는 문제가 주어지거나 노드 등이 주어지면 서로소 연산 알고리즘이나 BFS 등을 사용할 수 있다. 먼저 BFS에서 어느 군집을 구하라는 문제는 보통 **for 문을 통해서 리스트를 순회하면서 bfs를 각각 수행**하도록 해서 원하는 정보를 얻어내면 좋다.
+
+이 사이클 분석도 각 노드를 돌면서 시작 노드가 이미 방문했다면 0을 return하고, 처음 방문하는 노드라면 1을 return 하도록 한다. 이미 방문했다면 사이클이며, 사이클을 이미 다 돌은 후이기 때문에 사이클이 없다고 판단하여(중복되었기 때문에) 0을 리턴하는 것이다.
+
+## B. 코드 분석
+
+### 전체 코드
+
+```python
+from collections import deque
+import sys
+input = sys.stdin.readline
+
+t = int(input())
+
+def bfs(arr, visited, start):
+    if visited[start]:
+        return 0
+    q = deque([start])
+    visited[start] = True
+    while q:
+        now = q.popleft()
+        if not visited[arr[now]]:
+            visited[arr[now]] = True
+            q.append(arr[now])
+    return 1
+
+for _ in range(t):
+    n = int(input())
+    arr = [0] * (n + 1)
+    arr[1:] = list(map(int, input().split()))
+    visited = [False] * (n + 1)
+    cycles = 0
+
+    for i in range(1, n + 1):
+        cycles += bfs(arr, visited, i)
+    
+    print(cycles)
+```
+
+### B-1. 준비
+
+```python
+from collections import deque
+import sys
+input = sys.stdin.readline
+
+t = int(input())
+```
+
+bfs에 있어서 deque은 떼려야 뗄 수 없는 관계이다. collections 모듈에서 deque를 불러온다. 테스트 케이스가 여러 개이기 때문에 sys 모듈도 불러와서 입력을 빠르게 한다.
+
+### B-2. BFS 함수 정의
+
+```python
+def bfs(arr, visited, start):
+    if visited[start]:
+        return 0
+    q = deque([start])
+    visited[start] = True
+    while q:
+        now = q.popleft()
+        if not visited[arr[now]]:
+            visited[arr[now]] = True
+            q.append(arr[now])
+    return 1
+```
+
+각 테스트 케이스마다 arr와 visited와 start가 다르기 때문에 함수로 설정해준다. start를 입력 받아서 visited 테이블을 비교해봤을 때 이미 방문했으면 사이클이 이미 구해진 것이기 때문에 0을 리턴하도록 한다.
+
+while문에서는 visited가 방문하지 않은 노드이면, True로 방문처리해주고, q에 다음 노드를 넣는다. **이 과정을 통해 사이클을 다 방문처리할 수 있다.**
+
+### B-3. 테스트 케이스 순회
+
+```python
+for _ in range(t):
+    n = int(input())
+    arr = [0] * (n + 1)
+    arr[1:] = list(map(int, input().split()))
+    visited = [False] * (n + 1)
+    cycles = 0
+
+    for i in range(1, n + 1):
+        cycles += bfs(arr, visited, i)
+    
+    print(cycles)
+```
+
+array 속 수와 달리 인덱스는 0으로 시작하므로, n + 1개로 리스트들을 받아들인다. cycles는 사이클이 몇 번 발생했는지 저장하는 변수이다.
+
+그 이후 for문을 1부터 n까지 돌며 사이클을 확인한다.
+
+# 총평
+
+for문을 사용해서 여러 번 bfs 돌리는 방법을 다시 새겨주게 한 문제이다. BFS 복습 더 하자.
+
+![10451](https://user-images.githubusercontent.com/83271772/158201064-5fb71849-03cc-42d0-b543-6a992e529342.PNG)
