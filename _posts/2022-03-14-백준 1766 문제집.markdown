@@ -2,7 +2,7 @@
 layout: post
 title: "백준: 1766 문제집"
 excerpt: "Python, BFS, min_heapq"
-date: 2022-03-13 16:11:00 +0900
+date: 2022-03-14 23:15:00 +0900
 categories:
   - Baekjoon
 tags:
