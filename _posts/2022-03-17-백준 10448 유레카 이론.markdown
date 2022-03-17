@@ -1,0 +1,138 @@
+---
+layout: post
+title: "백준: 10448 유레카 이론"
+excerpt: "Python, brute_force"
+date: 2022-03-17 16:36:00 +0900
+categories:
+  - Baekjoon
+tags:
+  - brute_force
+---
+
+- [문제](#문제)
+- [입력](#입력)
+- [출력](#출력)
+- [문제 풀이](#문제-풀이)
+  - [A. 아이디어](#a-아이디어)
+  - [B. 코드 분석](#b-코드-분석)
+    - [전체 코드](#전체-코드)
+  - [B-1. 준비 및 풀이](#b-1-준비-및-풀이)
+  - [B-2. 출력](#b-2-출력)
+- [총평](#총평)
+
+# 문제
+
+삼각수 $T_n(n ≥ 1)$는 [그림]에서와 같이 기하학적으로 일정한 모양의 규칙을 갖는 점들의 모음으로 표현될 수 있다.
+
+<p align='center'><img src="https://www.acmicpc.net/upload/images2/eureka.png"></p>
+
+자연수 n에 대해 n ≥ 1의 삼각수 $Tn$는 명백한 공식이 있다.
+
+$$T_n = 1 + 2 + 3 + ... + n = n(n+1)/2$$
+
+1796년, 가우스는 모든 자연수가 최대 3개의 삼각수의 합으로 표현될 수 있다고 증명하였다. 예를 들어,
+
+* 4 = $T_1 + T_2$
+* 5 = $T_1 + T_1 + T_2$
+* 6 = $T_2 + T_2 or 6 = T_3$
+* 10 = $T_1 + T_2 + T_3 or 10 = T_4$
+
+이 결과는 증명을 기념하기 위해 그의 다이어리에 “Eureka! num = Δ + Δ + Δ” 라고 적은것에서 유레카 이론으로 알려졌다. 꿍은 몇몇 자연수가 정확히 3개의 삼각수의 합으로 표현될 수 있는지 궁금해졌다. 위의 예시에서, 5와 10은 정확히 3개의 삼각수의 합으로 표현될 수 있지만 4와 6은 그렇지 않다.
+
+자연수가 주어졌을 때, 그 정수가 정확히 3개의 삼각수의 합으로 표현될 수 있는지 없는지를 판단해주는 프로그램을 만들어라. 단, 3개의 삼각수가 모두 달라야 할 필요는 없다.
+
+# 입력
+
+프로그램은 표준입력을 사용한다. 테스트케이스의 개수는 입력의 첫 번째 줄에 주어진다. 각 테스트케이스는 한 줄에 자연수 K (3 ≤ K ≤ 1,000)가 하나씩 포함되어있는 T개의 라인으로 구성되어있다.
+
+# 출력
+
+프로그램은 표준출력을 사용한다. 각 테스트케이스에대해 정확히 한 라인을 출력한다. 만약 K가 정확히 3개의 삼각수의 합으로 표현될수 있다면 1을, 그렇지 않다면 0을 출력한다.
+
+# 문제 풀이
+
+## A. 아이디어
+
+브루트 포스는 **무지성**이다. 머리가 안 좋으면 몸이 힘들지만, 몸이 강하면 머리가 편하다.
+
+문제의 조건이 세 개의 삼각수가 되면 1로 출력이기 때문에 그냥 3중 for문을 돌린다.
+
+## B. 코드 분석
+
+### 전체 코드
+
+```python
+import sys
+input = sys.stdin.readline
+
+t = []
+
+def calc():
+    i = 1
+    while i * (i + 1) // 2 < 1000:
+        t.append(i * (i + 1) // 2)
+        i += 1
+
+calc()
+
+def triangle(x):
+    for i in range(len(t)):
+        for j in range(len(t)):
+            for k in range(len(t)):
+                if t[i] + t[j] + t[k] == x:
+                    return 1
+
+for _ in range(int(input())):
+    if triangle(int(input())) == 1:
+        print(1)
+    else:
+        print(0)
+```
+
+## B-1. 준비 및 풀이
+
+```python
+import sys
+input = sys.stdin.readline
+
+t = []
+
+def calc():
+    i = 1
+    while i * (i + 1) // 2 < 1000:
+        t.append(i * (i + 1) // 2)
+        i += 1
+
+calc()
+
+def triangle(x):
+    for i in range(len(t)):
+        for j in range(len(t)):
+            for k in range(len(t)):
+                if t[i] + t[j] + t[k] == x:
+                    return 1
+```
+
+문제에서 k는 1000 이하이므로 자연수의 합이 1000이 넘기 전까지 t에 넣는다.
+
+t에 넣고 triangle 함수를 정의한다. 3중 for문으로 3개의 덧셈으로 표현이 가능해질 때 1을 return 한다. 아니면 True로 해도 된다.
+
+## B-2. 출력
+
+```py
+for _ in range(int(input())):
+    if triangle(int(input())) == 1:
+        print(1)
+    else:
+        print(0)
+```
+
+각 테스트 케이스마다 조건을 나눠 출력한다.
+
+이렇게 하는 것보다 triangle 함수를 정의할 때 if 문을 만족하지 못하면 마지막에 return 0을 해서 `print(triangle(int(input())))`으로 출력하는 게 더 나을 것같다.
+
+# 총평
+
+<h2>브루트포스의 답은 적당한 무지성<h2>
+
+![10448](https://user-images.githubusercontent.com/83271772/158761355-6c13a94c-6771-40fd-be11-6334ed35f455.PNG)
