@@ -1,0 +1,144 @@
+---
+layout: post
+title: "18 Mar TIL: Nodejs 통합 테스트, 부하 테스트, 웹 소켓"
+excerpt: "Nodejs integration test, loaded test, Web Socket"
+date: 2022-03-18 19:50:00 +0900
+categories:
+  - Study
+tags:
+  - TIL
+---
+
+- [통합 테스트](#통합-테스트)
+- [부하 테스트](#부하-테스트)
+- [웹 소켓](#웹-소켓)
+  - [서버](#서버)
+  - [클라이언트](#클라이언트)
+
+# 통합 테스트
+
+라우터 내 미들웨어와 라이브러리가 모두 유기적으로 잘 작동되는지 테스트하는 것.
+
+하나의 라우터를 통째로 검사하는 것이기 때문에, 라우터와 라우터 간 유기적인 흐름을 잘 고려하여 테스트를 작성해야 한다.
+
+또한, 어떤 조건이 있어야 하는 테스트도 있다(로그인 여부). 이런 경우에는 afterAll(모든 테스트가 끝난 후), beforeEach(각각의 테스트 수행 전), afterEach(각각의 테스트 수행 후)를 사용해서 조건을 충족하도록 해야 한다.
+
+예를 들어 회원 정보가 없다고 가정하고 회원가입을 하는 경우 다음 테스트에서 저장된 테스트 데이터 때문에 오류가 발생하므로 마지막에 afterAll로 sequelize.sync({ force: true }); 이렇게 데이터를 서버를 재생성하며 테이블도 재생성하는 속성으로 초기화할 수 있다.
+
+# 부하 테스트
+
+코드의 오류 여부와 상관 없이 서버의 메모리가 부족해 서비스가 중단될 수 있다. 대표적으로 **OOM**(**Out of Memory**) 문제가 있다. 서버가 접속자들의 정보를 저장하기 위해 각각 일정 부분 메모리를 할당하기 때문에 메모리 문제가 발생하는 것이다.
+
+이를 테스트하기 위한 패키지로 artillery가 있다. `npm i -D artillery`
+
+서버가 실행된 상태에서 `npx artillery quick --count 100 -n 50 서버주소` 명령어로 빠르게 부하테스트를 할 수 있다.
+
+--count 옵션은 가상의 사용자 수를 의미하고, -n 옵션은 요청 횟수를 의미한다.
+
+response time 응답 지연 속도를 주목하는 것이 좋다. 최소(min) 11ms, 최대(max) 498ms, 중간값(median) 407.5ms, 하위95%(p95) 459.5ms, 하위99%(p99) 468.8ms가 소요됐다. 보통 **median과 p95의 차이가 크지 않으면 좋다**고 한다. **수치가 적을수록 대부분의 요청이 비슷한 속도로 처리되었다는 의미**이기 때문이다.
+
+실제 서비스에서 부하 테스트를 하면 서비스가 중단될 수도 있고, AWS나 GCP의 클라우드에서 종량제 요금을 선택한 경우 과다한 요금이 청구될 수 있으므로 **실제 서버와 같은 사양의 서버(보통 staging서버라고 부른다.)를 만든 후, 그 서버에서 부하 테스트를 하는 것이 좋다.**
+
+실제 사용자의 행동을 모방하여 시나리오를 작성할 수도 있다. 이때는 JSON 형식의 설정 파일을 작성해야 한다.
+
+```json
+{
+    "config": {
+        "target": "http://localhost:8001",
+        "phases": [
+            {
+                "duration": 60,
+                "arrivalRate": 30
+            }
+        ]
+    },
+    "scenarios": [{
+        "flow": [
+            {
+                "get": {
+                    "url": "/"
+                }
+            }, {
+                "post": {
+                    "url": "/auth/login",
+                    "json": {
+                        "email": "본인 이메일",
+                        "password": "비밀번호"
+                    }
+                }
+            }, {
+                "get": {
+                    "url": "/hashtag?hashtag=nodebird"
+                }
+            }
+        ]
+    }]
+}
+```
+
+config 객체에서 target을 현재 서버로 잡고, phases에서 60초 동안(duration), 매초 30명의 사용자(arrivalRate)를 생성하도록 설정했다. 즉, 1,800명이 접속하는 상황이다.
+
+scenarios에서는 사용자들이 어떤 동작을 할지 적는다. flow로는 메인 페이지(GET /)에 접속하고, 로그인(POST /auth/login)을 한 후 해시태그 검색(GET /hashtag?hashtag=nodebird)을 한다. 여러 개의 flow를 만들어도 된다.
+
+# 웹 소켓
+
+웹 소켓은 HTML5에 새로 추가된 스펙으로 **실시간 양방향 데이터 전송**을 위한 기술이며, HTTP와 다르게 WS라는 프로토콜을 사용한다.
+
+웹 소켓이 나오기 이전 HTTP 기술 중 하나인 풀링을 사용했다. HTTP가 클라이언트에서 서버로 향하는 단방향 통신이므로 주기적으로 서버에 새로운 업데이트가 있는지 확인하는 요청을 보낸 후, 있다면 새로운 내용을 가져오는 방법이었다.
+
+웹 소켓은 HTML5가 나오며 등장했고, 웹 브라우저와 웹 서버가 지속적으로 연결된 라인을 통해 실시간으로 데이터를 주고받을 수 있는 웹 소켓이 등장했다. 처음에 웹 소켓 연결이 이루어지고 나면 그다음부터는 **계속 연결된 상태**로 있으므로 따로 **업데이트가 있는지 요청을 보낼 필요가 없다.** 업데이트 내용이 생기면 서버에서 클라이언트로 바로 알린다. HTTP 프로토콜과 포트를 공유할 수 있으므로 다른 포트에 연결할 필요도 없다.
+
+또한, **서버센트 이벤트**(**Server Sent Events, SSE**)라는 기술도 등장했다. EventSource 객체를 사용하고, 한 번만 연결하면 서버가 클라이언트에 지속적으로 데이터를 보낸다. 차이점은 클라이언트에서 서버로는 데이터를 보낼 수 없다는 것이다. 즉, 서버에서 클라이언트로 보내는 단방향 통신이다.
+
+웹 소켓은 양방향 통신이며, SSE는 단방향 통신이기 때문에 상황에 맞게 사용하면 된다. 주식 경매 시스템은 양방향이 필요 없으므로 단방향 통신을 선택한다.
+
+## 서버
+
+웹 소켓 ws 모듈로 웹 소켓 서버를 생성자로 생성한다. 연결 후에 웹 소켓 서버에 이벤트 리스너를 붙인다. 웹 소켓은 **이벤트 기반으로 작동**한다.
+
+```js
+const WebSocket = require('ws');
+
+module.exports = (server) => {
+    const wss = new WebSocket.Server({ server });
+
+    wss.on('connection', (ws, req) => { // 웹 소켓 연결 시
+        const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+        console.log('새로운 클라이언트 접속', ip);
+        ws.on('message', (message) => {  // 클라이언트로부터 메시지 수신 시
+            console.log(message.toString());
+        });
+        ws.on('error', (error) => { // 에러 시
+            console.error(error);
+        });
+        ws.on('close', () => {
+            console.log('클라이언트 접속 해제', ip);
+            clearInterval(ws.interval);
+        });
+
+        ws.interval = setInterval(() => { // 3초마다 클라이언트로 메시지 전송
+            if (ws.readyState === ws.OPEN) {
+                ws.send('서버에서 클라이언트로 메시지를 보냅니다.');
+            }
+        }, 3000);
+    });
+};
+```
+
+* connection: 클라이언트가 서버와 웹 소켓 연결을 맺을 때 발생한다. `req.headers['x-forwarded-for'] || req.connection.remoteAddress;`는 클라이언트의 IP를 알아내는 유명한 방법으로 알아두면 좋다.
+
+익스프레스 서버와 연결 이후에 이벤트 리스너를 생성했다.
+
+* message: 클라이언트로부터 메시지가 왔을 때 발생한다.
+* error: 웹 소켓 연결 중 문제가 생겼을 때 발생한다.
+* close: 클라이언트와 연결이 끝났을 때 발생한다.
+
+setInterval 부분에서 readyState가 있다.
+
+* readyState는 웹 소켓 상태로 총 네 가지 상태가 있다. CONNECTING(연결 중), OPEN(열림), CLOSING(닫는 중), CLOSED(닫힘)이다. **OPEN일 때만 에러 없이 메시지를 보낼 수 있다.**
+
+또한, close 이벤트에서 **setInterval을 clearInterval로 정리하는 것을 반드시 기억해야 한다.** 필요 없는 리소스가 사용되기 때문이다.
+
+## 클라이언트
+
+웹 소켓은 양방향 통신이기 때문에 클라이언트에서도 웹 소켓을 사용해야 한다.
