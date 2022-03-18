@@ -14,6 +14,10 @@ tags:
 - [웹 소켓](#웹-소켓)
   - [서버](#서버)
   - [클라이언트](#클라이언트)
+  - [7-3. 자동 실행되는 트리거](#7-3-자동-실행되는-트리거)
+    - [7-3-1. 트리거 기본](#7-3-1-트리거-기본)
+      - [트리거의 개요](#트리거의-개요)
+      - [트리거의 기본 작동](#트리거의-기본-작동)
 
 # 통합 테스트
 
@@ -142,3 +146,36 @@ setInterval 부분에서 readyState가 있다.
 ## 클라이언트
 
 웹 소켓은 양방향 통신이기 때문에 클라이언트에서도 웹 소켓을 사용해야 한다.
+
+---
+
+## 7-3. 자동 실행되는 트리거
+
+### 7-3-1. 트리거 기본
+
+#### 트리거의 개요
+
+트리거란 테이블에 INSERT나 UPDATE 또는 DELETE 작업이 발생하면 실행되는 코드이다.
+
+예를 들어 회사에서 퇴사자가 발생해 해당 정보를 퇴사자 테이블로 옮긴다고 할 때, 수작업으로 하다보면 실수로 저장하지 못할 수도 있다. 이를 방지하기 위해 자동으로 옮길 수도 있는데 이런 기능을 하는 것이 트리거이다.
+
+#### 트리거의 기본 작동
+
+트리거는 테이블에서 **DML**(Data Manipulation Language)문 (**INSERT, UPDATE, DELETE 등**)의 **이벤트**가 발생할 때 작동한다.
+
+```sql
+DROP TRIGGER IF EXISTS myTrigger;
+DELIMITER $$
+CREATE TRIGGER myTrigger
+	AFTER DELETE
+    ON trigger_table
+    FOR EACH ROW
+BEGIN
+	SET @msg = '가수 그룹이 삭제됨';
+END $$
+DELIMITER ;
+```
+
+trigger 이름을 myTrigger로 설정한다. `AFTER DELETE`는 DELETE 문이 발생된 이후에 발생한다는 것이며 `ON`은 트리거를 부착할 테이블을 지정한다. `FOR EACH ROW`는 각 행마다 적용한다는 의미고 항상 써준다.
+
+BEGIN부터 END 까지는 트리거가 실제로 작동할 부분이다. 이제 trigger_table에서 DELETE를 수행할 때마다 트리거가 실행된다.
