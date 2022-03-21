@@ -1,12 +1,12 @@
 ---
 layout: post
 title: "백준: 1799 비숍"
-excerpt: "Python, backtracking"
+excerpt: "Python, Backtracking"
 date: 2022-03-18 09:01:00 +0900
 categories:
   - Baekjoon
 tags:
-  - backtracking
+  - Backtracking
 ---
 
 - [문제](#문제)

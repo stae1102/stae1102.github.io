@@ -1,12 +1,12 @@
 ---
 layout: post
 title: "백준: 4690 완전 세제곱"
-excerpt: "Python, brute_force"
+excerpt: "Python, Brute_force"
 date: 2022-03-13 16:11:00 +0900
 categories:
   - Baekjoon
 tags:
-  - brute_force
+  - Brute_force
 ---
 
 - [문제](#문제)

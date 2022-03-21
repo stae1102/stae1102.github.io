@@ -1,12 +1,12 @@
 ---
 layout: post
 title: "백준: 2503 숫자야구"
-excerpt: "Python, brute_force"
+excerpt: "Python, Brute_force"
 date: 2022-03-17 14:40:00 +0900
 categories:
   - Baekjoon
 tags:
-  - brute_force
+  - Brute_force
 ---
 
 - [문제](#문제)
