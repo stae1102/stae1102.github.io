@@ -1,0 +1,133 @@
+---
+layout: post
+title: "21 Mar TIL: Node.JS 교과서 Chap.12 스스로해보기 귓속말"
+excerpt: "Node.JS Web Socket.io"
+date: 2022-03-21 20:07:00 +0900
+categories:
+  - Study
+tags:
+  - TIL
+  - Homework
+---
+
+# 귓속말 버튼 만들기
+
+먼저 기능을 구현하고자 할 때 버튼을 먼저 만든다. Node.JS 숙제에서 항상 기능의 틀을 먼저 만들고 그 속을 채운다.
+
+채팅방 클라이언트는 chat.html로 구현되어 있다. 여기서 chat을 보여주는 소켓이 socket.on('chat')이므로 이곳을 중점적으로 확인한다.
+
+```js
+        socket.on('chat', function(data) {
+            const div = document.createElement('div');
+            if (data.user === '((user))') {
+                div.classList.add('mine');
+            } else {
+                div.classList.add('other');
+            }
+            const name = document.createElement('div');
+            name.textContent = data.user;
+            name.className = 'chat-user';
+            if (data.user !== '((user))') {
+                const dm = document.createElement('button');
+                dm.textContent = 'DM';
+                dm.className = 'dm';
+                dm.dataset.socket = data.socket;
+                dm.addEventListener('click', sendDM);
+                name.appendChild(dm);
+            }
+                div.appendChild(name);
+```
+
+귓속말을 자신에게 할 필요는 없으므로 chat 이벤트로 받은 data의 user가 본인이 아닐 때 귓속말 버튼을 만들도록 한다. **넌적스에서 변수를 중괄호 두 개로 받는 것**이 포인트이다. 이것이 있어야 이번 과제를 해결할 수 있다(중괄호 두개를 연달아 붙이면 깃헙 페이지에 오류가 생겨서 소괄호로 표현함😥).
+
+dm 변수에 button을 만들고 그 텍스트 내용은 DM 혹은 귓속말 등 원하는 것으로 채운다. class는 dm으로 설정한다. socket을 설정한 것은 소켓 아이디를 파악해서 해당 소켓 아이디로 메시지를 보낼 것이기 때문이다. 그리고 버튼을 클릭하면 이벤트를 수행하도록 한다.
+
+```js
+        const sendDM = function(e) {
+            const id = e.target.dataset.socket;
+            const prompt = window.prompt('메시지를 입력하세요.');
+            socket.emit('dm', { target: id, msg: prompt, from: '((user))' });
+        }
+```
+
+이벤트 속에서 id 변수에 아까 확보해둔 dataset.socket을 사용한다. dm.dataset.socket에 socket id를 저장하므로 id에 그 소켓 아이디를 받고, prompt로 전송할 메시지를 입력받는다.
+
+이후 socket으로 이벤트를 보낸다. 'dm' 이벤트로 `{ target: id, msg: prompt, from: '((user))' }` 데이터를 보낸다. 누가 데이터를 보냈는지 표현하기 위해서 엄청 애를 먹었다. 진짜 너무 찾기 힘들었다. 이 스크립트는 html에 쓰였기 때문에 **브라우저로 들어가 f12를 누르고 요소를 탐색하면 쉽게 정보를 확인할 수 있다.** 꿀팁🍯
+
+그렇게 소켓으로 이벤트를 보내면 socket.js에서 그 이벤트를 받는다. socket.js로 이동하자
+
+```js
+        socket.on('dm', (data) => {
+            console.log('귓속말을 보냅니다');
+            socket.to(data.target).emit('dm', data);
+        });
+```
+
+socket.js에서는 브라우저에서 소켓으로 보낸 dm 이벤트에 반응한다. dm 이벤트에 있던 data 데이터를 받아서 거기에 있던 타겟에게 socket.to()로 보낼 대상을 정하고, emit으로 이벤트를 보낸다.
+
+다시 chat.html로 돌아가자
+
+```js
+        socket.on('dm', (data) => {
+            alert(`${data.from}님께서 귓속말이 도착했습니다: ${data.msg}`);
+        });
+```
+
+chat.html 은 dm 이벤트를 받아서 data에 있던 from을 통해서 데이터를 전달한다.
+
+브라우저와 브라우저가 소켓을 거쳐 서로 통신하는 것이다. 이때, 라우터의 역할은 두 브라우저가 소켓을 통해 귓속말을 나눌 수 있도록 세션 id를 보여주는 역할을 한다.
+
+```js
+        document.querySelector('#chat-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            if (e.target.chat.value) {
+                axios.post('/room/{{room._id}}/chat', {
+                    chat: this.chat.value,
+                    sid: socket.id,
+                })
+                    .then(() => {
+                        e.target.chat.value = '';
+                    })
+                    .catch((err) => {
+                        console.error(err);
+                    });
+            }
+        });
+```
+
+axios로 post 요청을 보낼 때, socket.id도 같이 보낸다. 이렇게 하면 라우터에서 이 요청을 받아내는데,
+
+```js
+router.post('/room/:id/chat', async(req, res, next) => {
+    try {
+        const chat = await Chat.create({
+            room: req.params.id,
+            user: req.session.color,
+            chat: req.body.chat,
+        });
+        // req.app.get('io').of('/chat').to(req.params.id).emit('chat', chat);
+        req.app.get('io').of('/chat').to(req.params.id).emit('chat', {
+            socket: req.body.sid,
+            room: req.params.id,
+            user: req.session.color,
+            chat: req.body.chat
+        });
+        res.send('ok');
+    } catch(error) {
+        console.error(error);
+        next(error);
+    }
+});
+```
+
+`req.app.get('io')`를 통해서 `socket: req.body.sid`로 chat 이벤트를 발동시킨다. 이렇게 chat 이벤트를 보내면, 이 문서에서 맨 처음에 본 `socket.on('chat')`이 발동되고, `dm.dataset.socket`에 data.socket이 저장되는 것이다.
+
+각 연결 관계가 헷갈릴 수 있으니 잘 구분하자.
+
+# 느낀 점
+
+요즘 공부 속도가 조금 더디다. 매일 스스로 해보기 문제 때문에 시간을 많이 소요한다. 하지만, 다시 생각해보면 아주 좋은 속도인 것같다. 스스로 해보기로 하루를 날려버릴지언정 그것에서 배우는 것이 상당히 많다. 각 폴더들의 기본적인 사용과 라우터와 라우터 간의 상호작용, 그리고 데이터베이스의 조작 등 머리 속에서 헷갈리는 개념들을 스스로 해보기를 통해 다 배웠고, 논리적으로 생각하게 되었다. 이게 이렇게 전송이 되어서 이렇게 작동하는 것이다는 것들을 파악하고 나니 유기적인 맵의 구조도 알 수 있었다.
+
+너무 급급하게 생각하지 말자. 이 정도면 나 잘하고 있는 것 같다. 본격적으로 시작한 지 2주 정도 됐기 때문에 사실 느린 편은도 아닌 것라고 생각한....다~~~~~. 얼른 캐싱이랑 AWS도 배우고 도커와 쿠버네티스도 배워보고 싶다.
+
+오늘 전공자분의 github을 봤는데, 프로젝트 완성도가 다들 상당했다.. 더욱 열심히 해야겠다.

@@ -1,0 +1,25 @@
+---
+layout: post
+title: "21 Mar TIL: Node.JS 교과서 사이트 제작"
+excerpt: "Node.JS Basic Web Building"
+date: 2022-03-21 21:28:00 +0900
+categories:
+  - Study
+tags:
+  - TIL
+---
+
+# 1. 프로젝트 구조 갖추기
+
+먼저 사이트를 만들 때는 기본적인 구조를 갖춘다. 가장 처음 할 것은 당연히 패키지 설치이다. npm i 커맨드 설치를 하거나 아니면 package.json을 먼저 작성하고 npm i를 하자.
+
+데이터베이스도 MySQL로 할지 MongoDB로 할지 정한다. 각 사이트마다 데이터베이스를 선택할 수 있는데, SNS처럼 사용자 간 관계가 중요할 때는 RDBM을 사용하고 그렇지 않고 채팅 사이트처럼 확장성이 중요하다면 NoSQL인 MongoDB를 사용하자.
+
+MySQL을 사용할 때는 주로 다음과 같이 시작한다.
+
+```
+$ npm i sequelize sequelize-cli mysql2
+$ npx sequelize init
+```
+
+그리고 데이터베이스 간 구성을 그림으로 그리는 것도 좋다. 다른 사람 github에서 본 건데, 데이터베이스 구성을 그려놓아두면 확실히 관계성을 파악하기 용이하다.

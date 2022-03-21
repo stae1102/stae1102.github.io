@@ -1,0 +1,204 @@
+---
+layout: post
+title: "백준: 5430 AC"
+excerpt: "Python, Implementation, Queue"
+date: 2022-03-21 23:00:00 +0900
+categories:
+  - baekjoon
+tags:
+  - Implementaion
+  - Queue
+---
+
+- [문제](#문제)
+
+# 문제
+
+선영이는 주말에 할 일이 없어서 새로운 언어 AC를 만들었다. AC는 정수 배열에 연산을 하기 위해 만든 언어이다. 이 언어에는 두 가지 함수 R(뒤집기)과 D(버리기)가 있다.
+
+함수 R은 배열에 있는 수의 순서를 뒤집는 함수이고, D는 첫 번째 수를 버리는 함수이다. 배열이 비어있는데 D를 사용한 경우에는 에러가 발생한다.
+
+함수는 조합해서 한 번에 사용할 수 있다. 예를 들어, "AB"는 A를 수행한 다음에 바로 이어서 B를 수행하는 함수이다. 예를 들어, "RDD"는 배열을 뒤집은 다음 처음 두 수를 버리는 함수이다.
+
+배열의 초기값과 수행할 함수가 주어졌을 때, 최종 결과를 구하는 프로그램을 작성하시오.
+
+# 입력
+
+첫째 줄에 테스트 케이스의 개수 T가 주어진다. T는 최대 100이다.
+
+각 테스트 케이스의 첫째 줄에는 수행할 함수 p가 주어진다. p의 길이는 1보다 크거나 같고, 100,000보다 작거나 같다.
+
+다음 줄에는 배열에 들어있는 수의 개수 n이 주어진다. (0 ≤ n ≤ 100,000)
+
+다음 줄에는 [$x_1$,...,$x_n$]과 같은 형태로 배열에 들어있는 정수가 주어진다. (1 ≤ $x_i$ ≤ 100)
+
+전체 테스트 케이스에 주어지는 p의 길이의 합과 n의 합은 70만을 넘지 않는다.
+
+# 출력
+
+각 테스트 케이스에 대해서, 입력으로 주어진 정수 배열에 함수를 수행한 결과를 출력한다. 만약, 에러가 발생한 경우에는 error를 출력한다.
+
+# 예제 입력 1
+
+```
+4
+RDD
+4
+[1,2,3,4]
+DD
+1
+[42]
+RRD
+6
+[1,1,2,3,5,8]
+D
+0
+[]
+```
+
+# 예제 출력 1
+
+```
+[2,1]
+error
+[1,2,3,5,8]
+error
+```
+
+# 문제 풀이
+
+## A. 아이디어
+
+문제에서 앞뒤로 뒤집고 배열의 앞을 제거하는 명령이 있어서 큐가 필요하다고 생각했다. popleft()가 가능한 deque을 불러온다.
+
+또한, 예제 입력을 보니, D의 개수가 배열의 길이보다 길 때 어차피 error가 발생하므로 바로 error를 출력하고 다음 테스트 케이스로 넘어간다. 또한, R이 여러 개가 연달아 들어오면 짝수 개일 때는 그대로이고, 홀수 개일 때는 배열이 반전되기 떄문에 홀수인지 짝수인지만 정해서 배열을 조작하면 된다. 이때, **R이 홀수라고 해서 무조건 배열을 뒤집을 필요는 없다.** 뒤에서 알아보쟈~
+
+## B. 코드 분석
+
+### 전체 코드
+
+```py
+from collections import deque
+import sys
+input = sys.stdin.readline
+t = int(input())
+
+def solve(func, arr):
+    rev = False
+    for i in func:
+        if i == "R":
+            if rev: rev = False
+            else: rev = True
+        else:
+            if not arr or not arr[0]: return None
+            # 뒤집혔으면 뒤에서 추출
+            if rev: arr.pop()
+            # 안 뒤집혔으면 앞에서 추출
+            else: arr.popleft()
+
+    if rev: arr.reverse()
+
+    return arr
+
+for _ in range(t):
+    func = input().rstrip()
+    n = int(input())
+    q = deque(input().rstrip()[1:-1].split(','))
+    q = solve(func, q)
+    if q != None: print("[" + ','.join(q) + "]")
+    else: print('error')
+```
+
+### B-1. 준비
+
+```py
+from collections import deque
+import sys
+input = sys.stdin.readline
+t = int(input())
+```
+큐를 사용할 것이므로 deque를 사용한다. 원래 check 함수를 만들어서 D의 개수를 다 카운팅 했었는데, 그렇게 하면 check 함수에서 O(N), 체크 함수에서 O(N)이 또 실행되므로 일단 O(2N)이 된다. 그래서 check 함수를 없애고 solve 함수에서 D를 체크하기로 했다.
+
+### B-2. 풀이
+
+```py
+def solve(func, arr):
+    rev = False
+    for i in func:
+        if i == "R":
+            if rev: rev = False
+            else: rev = True
+        else:
+            if not arr or not arr[0]: return None
+            # 뒤집혔으면 뒤에서 추출
+            if rev: arr.pop()
+            # 안 뒤집혔으면 앞에서 추출
+            else: arr.popleft()
+
+    if rev: arr.reverse()
+
+    return arr
+
+for _ in range(t):
+    func = input().rstrip()
+    n = int(input())
+    q = deque(input().rstrip()[1:-1].split(','))
+    q = solve(func, q)
+```
+
+rev변수는 R이 홀수 개인지 짝수 개인지 체크해서 반전의 여부를 포함하는 변수이다. 이것은 D를 만날 때 조건에 따라 다르게 삭제하기 위해 설정하는 것이다.
+
+만약 반전된 상태에서 D가 실행되면 배열을 반전해서 맨 앞 원소를 제거하는 것인데, 이것은 원래 배열에서 맨 뒤 원소를 제거하는 것이랑 같다.
+
+예를 들어 [1, 2, 3, 4]에서 RD 명령을 한다고 했을 때, [4, 3, 2, 1] -> [3, 2, 1] 이렇게 된다. 그런데 이것은 그냥 [1, 2, 3, 4]에서 pop()을 하는 것과 같다. 그래서 반전이 있으면 pop() 메서드를, 그렇지 않다면 원래대로 popleft() 메서드를 실행한다.
+
+또한, 배열이 비어있는 상태이거나, split에서 빈 문자열을 리스트로 받은 경우에는 error이기 때문에 바로 return None 혹은 return False 등으로 error 임을 표현한다.
+
+최종적으로 배열이 뒤집혀 있는 상태라면 arr을 reverse() 메서드를 사용해 뒤집는다.
+
+### B-3. 출력
+
+```py
+    if q != None: print("[" + ','.join(q) + "]")
+    else: print('error')
+```
+
+q가 error 가 아니라면 return으로 arr을 리턴받을 것이므로 위와 같이 조건문을 세웠다. 정상적이라면 arr 배열을 ','.joint(q)을 사용해서 문자열로 만들고 출력한다.
+
+## C. 좋은 답안
+
+```py
+import sys
+for tc in range(int(sys.stdin.readline())):
+    ops = list(map(len, sys.stdin.readline().rstrip().replace('RR','').split('R')))
+    N = int(sys.stdin.readline())
+    line = sys.stdin.readline().rstrip()
+    
+    dq = line[1:-1].split(',') if N else []
+    bound = [sum(ops[0::2]), sum(ops[1::2])]
+    if sum(bound) > N:
+        print('error')
+        continue
+    dq = dq[bound[0]:N-bound[1]]
+    if len(ops)%2 == 0:
+        dq.reverse()
+    print('['+','.join(dq)+']')
+```
+
+진짜 충격적인 답안이었다. 이렇게도 풀 수 있구나 싶었다. RR을 비우고 R로 먼저 나눈다. 이렇게 하면 짝수에 위치한 D는 모두 반전된 상태에서의 D이고, 홀수에 위치한 D는 모두 원래 배열에서의 D를 실행하는 것이다. 이 상태에서 bound 리스트에 각 D들의 길이를 더해주고 저장한다. 그 합이 N이 넘으면 D가 더 많다는 의미로 error를 출력하고, 그렇지 않다면 bound[0]부터 N-bound[1]의 범위를 가져온다.
+
+split한 배열의 길이가 홀수면 그대로 출력하고, 짝수면 뒤집한 상태니까 reverse()를 해준다.
+
+미쳤다. 진짜 너무 간단하고 강력하다. 이 정도로 하려면 몇 개월은 해야 할 것같다.
+
+# 총평
+
+구현문제를 오랜만에 풀어봤는데, 정말 많은 것을 배웠다.
+
+먼저 Queue를 최대한으로 활용하는 방법을 다시 배웠다. Queue는 pop()과 popleft()가 모두 가능하기에 이를 적극적으로 이용하자.
+
+두 번째로 컴퓨터는 매우 심플하면서도 논리적이기 때문에 조건 분기를 잘 세워야 한다는 것이다. 예외 처리를 하느라 시간이 굉장히 많이 소요되었다. 예를 들어 split이 안 될 때는 ''를 출력한다는 것, 맨 앞에 split()의 매개변수가 있는 것도 ''로 저장된다.
+
+한 번 풀고 나면 최적화가 쉬워진다.
+
+![5430](https://user-images.githubusercontent.com/83271772/159286585-6f1e7e3f-a760-4432-8988-a91ec72cab1b.PNG)
