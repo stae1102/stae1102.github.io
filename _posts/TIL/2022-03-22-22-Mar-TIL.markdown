@@ -1,0 +1,57 @@
+---
+layout: post
+title: "22 Mar TIL: Node.JS 교과서 사이트 제작"
+excerpt: "Node.JS Basic Web Building"
+date: 2022-03-22 13:28:00 +0900
+categories:
+  - Study
+tags:
+  - TIL
+---
+
+- [1. 프로젝트 구조 갖추기](#1-프로젝트-구조-갖추기)
+- [2. 데이터베이스 설정](#2-데이터베이스-설정)
+- [3. 패스포트 설정](#3-패스포트-설정)
+- [4. app.js 생성(메인 파일 생성)](#4-appjs-생성메인-파일-생성)
+- [5. html 파일 생성](#5-html-파일-생성)
+- [6. 라우터 생성](#6-라우터-생성)
+
+# 1. 프로젝트 구조 갖추기
+
+기본적인 패키지 구성을 갖추고 SQL을 선택하면 데이터베이스를 구상한다. 실시간 경매 사이트이므로, 유저와 물건 그리고 상품에 대한 데이터가 필요하다. 그리고 각 데이터는 서로 유기적인 관계를 가지기 때문에 MySQL과 같은 RDMBS를 사용하도록 한다.
+
+# 2. 데이터베이스 설정
+
+각 테이블 모델을 만들었으면 config폴더의 config.json 파일에서 원하는 모드에 정보를 집어 넣는다. database이름은 이 테이블들을 잘 나타내고 웹 사이트의 특징을 잘 보여주는 이름으로 정한다.
+
+이후 `npx sequelize db:create`로 데이터베이스를 생성한다.
+
+최종적으로 테이블을 생성해주고 관계를 지어주기 위해 models 폴더에서 index.js를 작성한다. config 파일을 읽어야 하므로 config을 불러오고, 개발 용도에 따라 config이 다르므로 process.env.NODE_ENV로 개발 환경인지 배포 환경인지 불러온다.
+
+이후 config파일에 따라 sequelize 인스턴스를 만들고 db에 저장한다. init 메서드로 모델을 생성하고 associate로 모델 간 관계를 짓는다.
+
+# 3. 패스포트 설정
+
+`npm i passport passport-local bcrypt`로 로그인에 필요한 패키지들을 불러온다.
+
+먼저 local로 로그인하는 경우를 설정한다. passport 폴더에 localStrategy.js 파일을 만들고 `const LocalStrategy = require('passport-local').Strategy;`로 로컬 로그인을 수행할 생성자를 만든다.
+
+그 이후 index.js를 만들어 로그인 전략 수행 후 세션에 아이디를 저장하도록 한다. passport.serializeUser와 passport.deserializeUser가 포인트이다.
+
+passport 설정이 끝났으면 본격적으로 로그인을 수행할 미들웨어를 추가한다. 주로 routes/auth.js 로 파일을 생성한다. 방금 만든 **로그인 전략**을 여기서 수행하는 것이다. 전략을 만들고 실행하지 않는다면 로그인을 못한다! 그래서 미들웨어 추가는 필수!!
+
+또한, 로그인이 됐을 때와 로그인이 되지 않았을 때를 구분해야 하므로, 새로 middlewares.js를 만들어서 로그인 및 로그아웃 상태를 확인한다.
+
+# 4. app.js 생성(메인 파일 생성)
+
+.env로 환경을 설정하고 app.js로 각 미들웨어가 부여될 라우터들을 설정한다. 커맨드 센터처럼 패키지들의 설정들을 모든 라우터로 뿌려주기도 하고, 각 url에 따라 라우터를 할당해서 길을 잘 찾도록 해준다.
+
+# 5. html 파일 생성
+
+원하는 용도에 따라 html 파일을 생성하도록 한다. 보통 웹 사이트들은 하나의 통일된 구조가 있어서 **layout을 만들고 여기서 블럭을 만드는 것**이 유연하게 웹 사이트를 구성하는 꿀팁이다.
+
+layout을 구성한 이후에는 메인화면, 회원가입 화면 등 계획한 사이트에 맞게 html을 만든다.
+
+# 6. 라우터 생성
+
+최종적으로 다 마쳤으면, 각 API를 받을 라우터를 만든다. routes/index.js로 메인 라우터를 생성한다. router.use에서 `res.locals.user = req.user;`로 모든 템플릿에 사용자 정보를 변수로 집어 넣었다. 이렇게 하면 res.render 메서드에 user: req.user를 하지 않아도 된다.
