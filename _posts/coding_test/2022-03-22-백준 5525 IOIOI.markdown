@@ -1,0 +1,137 @@
+---
+layout: post
+title: "백준: 5525 IOIOI"
+excerpt: "Python, Brute_force"
+data: 2022-03-22 23:55:00 +0900
+categories:
+  - Baekjoon
+tags:
+  - Brute_force
+---
+
+# 문제
+
+N+1개의 I와 N개의 O로 이루어져 있으면, I와 O이 교대로 나오는 문자열을 $P_N$이라고 한다.
+
+* $P_1$ IOI  
+* $P_2$ IOIOI  
+* $P_3$ IOIOIOI  
+* $P_N$ IOIOI...OI (O가 N개)  
+I와 O로만 이루어진 문자열 S와 정수 N이 주어졌을 때, S안에 $P_N$이 몇 군데 포함되어 있는지 구하는 프로그램을 작성하시오.
+
+# 입력
+
+첫째 줄에 N이 주어진다. 둘째 줄에는 S의 길이 M이 주어지며, 셋째 줄에 S가 주어진다.
+
+# 출력
+
+S에 $P_N$이 몇 군데 포함되어 있는지 출력한다.
+
+# 제한
+
+* 1 ≤ N ≤ 1,000,000
+* 2N+1 ≤ M ≤ 1,000,000
+* S는 I와 O로만 이루어져 있다.
+
+# 예제 입력 1
+
+```
+1
+13
+OOIOIOIOIIOII
+```
+
+# 예제 출력 1
+
+```
+4
+```
+
+# 예제 입력 2
+
+```
+2
+13
+OOIOIOIOIIOII
+```
+
+# 예제 출력 2
+
+```
+2
+```
+
+# 문제 풀이
+
+## A. 아이디어
+
+무식하게 브루트 포스를 사용하면 풀릴 것 같았다. check할 문자열의 길이를 m에서 빼준 다음 while이나 for i in range()로 순회한다.
+
+결과적으로는 순회하는 것이 맞으나, 비교하는 방법이 시간 복잡도면에서 옳지 않았다. 문자열을 순회하는 것이 2n + 1의 문자열을 정답이면 두 칸씩, 오답이면 한 칸씩 넘어다니며 체크하였는데, 일단 문자열 비교가 O(2N + 1)이었고, 리스트를 다 돌아다니는 것이 대강 O(M)이기 때문에 O(NM)이다. 더 효율적인 방법을 찾아야 한다. 그렇기 때문에 문자열을 전체 비교하는 것이 아니라, IOI가 반복된다는 사실을 이용해서 찾아낸다.
+
+## B. 코드 분석
+
+### 전체 코드
+
+```py
+import sys
+n = int(sys.stdin.readline())
+m = int(sys.stdin.readline())
+s = sys.stdin.readline().rstrip()
+
+cnt = 0
+check = 0
+i = 1
+while i < m - 1:
+    if s[i-1] == "I" and s[i] == "O" and s[i + 1] == "I":
+        check += 1
+        if check == n:
+            cnt += 1
+            check -= 1
+        i += 1
+    else:
+        check = 0
+    i += 1
+
+print(cnt)
+```
+
+### B-1. 준비
+
+```py
+import sys
+n = int(sys.stdin.readline())
+m = int(sys.stdin.readline())
+s = sys.stdin.readline().rstrip()
+
+cnt = 0
+check = 0
+i = 1
+```
+
+전체적으로 입력을 받고, 카운트, 체크할 변수, 카운팅 변수를 초기화한다.
+
+### B-2. 풀이 및 출력
+
+```py
+while i < m - 1:
+    if s[i-1] == "I" and s[i] == "O" and s[i + 1] == "I":
+        check += 1
+        if check == n:
+            cnt += 1
+            check -= 1
+        i += 1
+    else:
+        check = 0
+    i += 1
+
+print(cnt)
+```
+
+카운팅 변수의 전 중 후를 비교하고 맞다면 check를 1 더하고 그렇지 않으면 check를 초기화한다. check가 모두 맞다면, 즉 n과 개수가 같다면 그때 카운트를 하고 오른쪽으로 두 번 이동하기 때문에 i를 더해준다.
+
+# 총평
+
+효율적인 비교 방법을 배웠다. 문자열을 슬라이싱을 통해 비교하는 것보다, 반복되는 문자열의 경우에는 그냥 리스트를 순회하며 O(N)이 되도록 비교할 수 있기 때문에 이 점을 꼭 유념해두자
+
+![5525](https://user-images.githubusercontent.com/83271772/159513528-a2e32d3f-c872-4964-9a89-7aa56a7ea7db.PNG)
