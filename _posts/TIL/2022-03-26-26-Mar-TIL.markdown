@@ -1,0 +1,36 @@
+---
+layout: post
+title: "26 Mar TIL: Node.JS winston 로그, 레디스"
+excerpt: "Node.JS winston, redis"
+date: 2022-03-26 11:48:00 +0900
+categories:
+  - Study
+tags:
+  - TIL
+---
+
+# winston
+
+배포 환경에서는 console.log 또는 console.error를 사용하기가 어렵다. 언제 호출되었는지 파악하기 힘들 뿐더러 서버가 종료되면 로그들도 사라지기 때문이다. 따라서, 로그를 파일이나 다른 데이터베이스에 저장해야 한다. 이때 winston을 사용한다.
+
+winston 패키지의 createLogger 메서드로 logger를 만든다. 인수로 설정을 넣어줄 수 있고 level, format, transports 등이 있다.
+
+* level은 로그의 심각도를 의미한다. error, warn, info, verbose, debug, silly가 있다. error부터 심각도 순이다. info를 고른 경우 심각한 단계의 로그(error, warn)도 함께 기록된다.
+
+* format은 로그의 형식이다. json, label, timestamp, printf, simple, combine 등 다양한 형식이 있다. 기본적으로는 JSON 형식으로 기록하지만, 로그 기록 시간을 표시하려면 timestamp를 쓰는 것이 좋다. combined는 여러 형식을 혼합해서 사용할 때 쓴다. 
+
+* transports는 로그 저장 방식을 의미한다. new transports.File은 파일로 저장한다는 뜻이고, new transports.Console은 콘솔에 출력한다는 뜻이다. 여러 로깅 방식 방식을 동시에 사용할 수도 있다. 배포 환경이 아닌 경우 파일 뿐만 아니라 콘솔에도 출력하도록 되어 있다. 이 메서드들에도 level, format 등을 설정할 수 있다.
+
+info 이상 단계의 모든 로그를 기록하도록 되어 있는 파일에는 info와 error 단계의 로그가 저장되어 있고, error 단계의 로그만 기록하도록 되어 있는(transports에서 설정) error.log에는 error 단계의 로그만 저장되어 있다.
+
+# connect-redis
+
+멀티 프로세스 간 세션 공유를 위해 레디스와 익스프레스를 연결해준다. 기존에는 로그인할 때 express-session의 세션 아이디와 실제 사용자 정보가 메모리에 저장된다.
+
+따라서 서버가 종료되어 메모리가 날아가면 접속자들의 로그인이 모두 풀려버린다. 이를 해결하기 위해 세션 아이디와 실제 사용자 정보를 데이터베이스에 저장한다. 이때 사용하는 데이터베이스가 레디스이다. 메모리 기반의 데이터베이스라서 성능이 우수하다.
+
+redis 데이터베이스를 만들면, endpoint와 redis password를 복사해 .env 파일에 저장한다. connect-redis 패키지로부터 RedisStore 객체를 require한다. 이때 session을 인수로 넣어서 호출해야 한다. 왜냐하면, connect-redis는 express-session에 의존성이 있기 때문이다.
+
+redis 패키지의 createClient 메서드로 redisClient 객체를 생성한다. 이때 url과 password 속성에 접속 정보를 입력한다. express-session 미들웨어에는 store 옵션을 추가한다. 기본적으로는 메모리에 세션을 저장하지만, 이제는 RedisSotre에 저장한다. 
+
+이제 세션 정보가 메모리 대신 레디스에 저장된다. 따라서 로그인 후 서버를 껏다 켜도 로그인이 유지된다.

@@ -1,0 +1,283 @@
+---
+layout: post
+title: "백준: 3197 백조의 호수"
+excerpt: "Python, BFS, Data_structure"
+date: 2022-03-26 19:45:00 +0900
+categories:
+  - Baekjoon
+tags:
+  - BFS
+  - Data_structure
+---
+
+# 문제
+
+두 마리의 백조가 호수에서 살고 있었다. 그렇지만 두 마리는 호수를 덮고 있는 빙판으로 만나지 못한다.
+
+호수는 행이 R개, 열이 C개인 직사각형 모양이다. 어떤 칸은 얼음으로 덮여있다.
+
+호수는 차례로 녹는데, 매일 물 공간과 접촉한 모든 빙판 공간은 녹는다. 두 개의 공간이 접촉하려면 가로나 세로로 닿아 있는 것만 (대각선은 고려하지 않는다) 생각한다.
+
+아래에는 세 가지 예가 있다.
+
+```
+...XXXXXX..XX.XXX ....XXXX.......XX .....XX.......... 
+....XXXXXXXXX.XXX .....XXXX..X..... ......X.......... 
+...XXXXXXXXXXXX.. ....XXX..XXXX.... .....X.....X..... 
+..XXXXX..XXXXXX.. ...XXX....XXXX... ....X......XX.... 
+.XXXXXX..XXXXXX.. ..XXXX....XXXX... ...XX......XX.... 
+XXXXXXX...XXXX... ..XXXX.....XX.... ....X............ 
+..XXXXX...XXX.... ....XX.....X..... ................. 
+....XXXXX.XXX.... .....XX....X..... ................. 
+      처음               첫째 날             둘째 날
+```
+
+백조는 오직 물 공간에서 세로나 가로로만(대각선은 제외한다) 움직일 수 있다.
+
+며칠이 지나야 백조들이 만날 수 있는 지 계산하는 프로그램을 작성하시오.
+
+# 입력
+
+입력의 첫째 줄에는 R과 C가 주어진다. 단, 1 ≤ R, C ≤ 1500.
+
+다음 R개의 줄에는 각각 길이 C의 문자열이 하나씩 주어진다. '.'은 물 공간, 'X'는 빙판 공간, 'L'은 백조가 있는 공간으로 나타낸다.
+
+# 출력
+
+첫째 줄에 문제에서 주어진 걸리는 날을 출력한다.
+
+# 예제 입력
+
+```
+8 17
+...XXXXXX..XX.XXX
+....XXXXXXXXX.XXX
+...XXXXXXXXXXXX..
+..XXXXX.LXXXXXX..
+.XXXXXX..XXXXXX..
+XXXXXXX...XXXX...
+..XXXXX...XXX....
+....XXXXX.XXXL...
+```
+
+# 예제 출력
+
+```
+2
+```
+
+# 문제 풀이
+
+## A. 아이디어
+
+문제를 큰 틀에서 보면 단순하다. 백조가 움직이는 함수를 하나 만들고, 물이 녹는 함수를 하나 만들면 되기 때문이다. 물을 큐에 넣고 얼음을 만나면 값은 '.'으로 바꾸고 큐에 넣지 않는 식으로 구현하고, 백조는 한 백조만 고려하여 다른 백조는 만나는 경우만 생각해서 구현하면 된다.
+
+하지만, 중요한 것은, BFS로 계속해서 변화가 발생하는 경우에는 모든 곳을 매번 전부 순회하기 때문에 시간도 오래 걸리고 메모리도 많이 잡아먹기 때문이다. 실제로 구현이 정상적으로 이루어졌으나, 시간초과와 메모리초과로 애를 많이 먹었다.
+
+문제의 조건을 다시 보자. 문제에서는 계속해서 얼음이 녹는데, 그 녹는 것은 얼음과 멀리 떨어진 물과는 서로 관련이 없다. 즉, 가장자리만 고려하면 되기 때문에 모든 물을 탐색하지 말고 얼음이 녹을 경우, 그곳의 좌표만 저장하는 식으로 수행하는 것이 시간 복잡도와 메모리 사용을 줄일 수 있다.
+
+이는 백조도 마찬가지이다. 백조도 모든 곳을 다 돌아다니면 시간이 꽤 오래 걸린다. 그렇기 때문에 백조의 위치도 얼음을 마주치게 되면 마주치기 전 좌표를 저장하여 다음에 사용하도록 하는 것이다. 그렇게 되면 다음에 백조가 이동할 때, 이동한 곳에서부터 이동하기 때문에 빠르게 찾을 수 있다.
+
+즉, 요점은 **현재 물의 좌표**와 **다음 번 물이 될 좌표(현재 "가장자리" 얼음)**를 담을 큐를 준비하고, 백조의 경우 **현재 백조 좌표**와 **다음 번 백조의 시작 좌표** 이렇게 큐를 준비한다.
+
+이때, 쓸 데 없는 조건이 없는지 꼭 체크하도록 한다.
+
+## B. 코드 분석
+
+### 전체 코드
+
+```py
+from collections import deque
+import sys
+input = sys.stdin.readline
+
+r, c = map(int, input().split())
+
+graph = []
+swan = deque()
+next_swan = deque()
+water = deque()
+ice = deque()
+
+for i in range(r):
+    row = list(input().rstrip())
+    for a, b in enumerate(row):
+        if b != 'X':
+            if b == 'L':
+                swan.append([i, a])
+            water.append((i, a))
+    graph.append(row)
+
+swan[0].append('L1')
+swan[1].append('L2')
+
+dx = [0, 0, -1, 1]
+dy = [-1, 1, 0, 0]
+
+visited = [[0] * c for _ in range(r)]
+visited_s = [[0] * c for _ in range(r)]
+
+def melt():
+    
+    while water:
+        x, y = water.popleft()
+        for i in range(4):
+            nx = x + dx[i]
+            ny = y + dy[i]
+            if 0 <= nx < r and 0 <= ny < c and not visited[nx][ny]:
+                visited[nx][ny] = 1
+                if graph[nx][ny] == 'X':
+                    graph[nx][ny] = '.'
+                    ice.append((nx, ny))
+                    continue
+                # water.append((nx, ny))
+
+def find_swan():
+
+    while swan:
+        x, y, l = swan.popleft()
+        for i in range(4):
+            nx = x + dx[i]
+            ny = y + dy[i]
+            if 0 <= nx < r and 0 <= ny < c:
+                if (l == 'L1' and graph[nx][ny] == 'L2') or (l == 'L2' and graph[nx][ny] == 'L1'):
+                    return True
+                if not visited_s[nx][ny]:
+                    if graph[nx][ny] == 'X':
+                        next_swan.append((x, y, l))
+                        continue
+                    visited_s[nx][ny] = 1
+                    graph[nx][ny] = l
+                    swan.append((nx, ny, l))
+
+    return False
+
+ans = 0
+
+while True:
+    if find_swan():
+        print(ans)
+        exit()
+    melt()
+    swan, next_swan = next_swan, swan
+    water, ice = ice, water
+    ans += 1
+```
+
+### B-1. 준비
+
+```py
+from collections import deque
+import sys
+input = sys.stdin.readline
+
+r, c = map(int, input().split())
+
+graph = []
+swan = deque()
+next_swan = deque()
+water = deque()
+ice = deque()
+
+for i in range(r):
+    row = list(input().rstrip())
+    for a, b in enumerate(row):
+        if b != 'X':
+            if b == 'L':
+                swan.append([i, a])
+            water.append((i, a))
+    graph.append(row)
+
+swan[0].append('L1')
+swan[1].append('L2')
+
+dx = [0, 0, -1, 1]
+dy = [-1, 1, 0, 0]
+
+visited = [[0] * c for _ in range(r)]
+visited_s = [[0] * c for _ in range(r)]
+```
+
+준비할 게 조금 많았다 먼저 맵을 받고, 백조의 위치와 다음 위치를 받을 큐, 현재 물과 다음 번에 물이 될 곳을 담을 큐를 초기화하였다.
+
+그리고 맵 입력을 받을 때, 각 행을 순회하여 얼음이 아닌 곳을 모두 water에 넣고 특히 백조의 위치는 swan에도 넣었다. swan의 종류를 구분하기 위해 일단 리스트로 저장했다. **백조가 있는 곳도 물이므로 꼭 water에도 넣어줘야 한다.** 여기서 많이 고생하셨을 것 같다.
+
+이후, 각 백조를 구분하기 위해 L1과 L2를 append한다.
+
+그 다음 백조가 이동하기 위해 dx와 dy를 초기화한다. 얼음의 방문 테이블과 백조의 방문 테이블을 따로 저장해둔다.
+
+### B-2. 풀이
+
+```py
+def melt():
+    
+    while water:
+        x, y = water.popleft()
+        for i in range(4):
+            nx = x + dx[i]
+            ny = y + dy[i]
+            if 0 <= nx < r and 0 <= ny < c and not visited[nx][ny]:
+                visited[nx][ny] = 1
+                if graph[nx][ny] == 'X':
+                    graph[nx][ny] = '.'
+                    ice.append((nx, ny))
+                    continue
+                # water.append((nx, ny))
+
+def find_swan():
+
+    while swan:
+        x, y, l = swan.popleft()
+        for i in range(4):
+            nx = x + dx[i]
+            ny = y + dy[i]
+            if 0 <= nx < r and 0 <= ny < c:
+                if (l == 'L1' and graph[nx][ny] == 'L2') or (l == 'L2' and graph[nx][ny] == 'L1'):
+                    return True
+                if not visited_s[nx][ny]:
+                    if graph[nx][ny] == 'X':
+                        next_swan.append((x, y, l))
+                        continue
+                    visited_s[nx][ny] = 1
+                    graph[nx][ny] = l
+                    swan.append((nx, ny, l))
+
+    return False
+```
+
+크게 물이 녹는 함수와 백조를 찾는 함수로 나눈다.
+
+첫 번째 물이 녹는 함수는 water를 뽑아낸다. nx와 ny로 다음 이동할 곳을 탐색한다. 방문하지 않았다면 방문처리 해주고, 만약 그 곳이 얼음이라면, 가장자리 부분이라고 간주하고 '.'로 값을 바꾸고 다음 시도에 water로 쓰일 ice 큐에 저장한다(다음에 물로 시작할 곳이 되기 때문이다).
+
+이때 중요한 것은, 물을 녹이기만 하면 된다는 것이다. 굳이 water에 이동한 좌표를 넣어서 또 이동할 필요가 없다. 맨 처음 시도에서도 모든 그래프의 물의 좌표를 받아왔었기 때문에 예외 없이 이렇게 구현할 수 있다. **계속해서 실패하다가 water.append를 주석처리 했더니 정답으로 처리됐다.**
+
+백조를 찾는 함수 부분에는 x, y, l 이렇게 세 개의 변수를 생성하였다. 두 백조를 모두 L로 저장해두면 둘이 구분을 할 수가 없어서 각각 L1, L2로 구분했고, 그 둘을 l이라는 변수에 저장해서 탐색한다. 그래서 다음에 방문할 곳이 서로 다른 백조라면 함수를 멈추고 True를 리턴한다.
+
+그리고 얼음을 방문하면 백조의 위치를 저장해준다. 얼음이 아니라면, 백조는 위치가 하나라서 매번 백조의 이동을 큐에 저장해주어야 한다. 방문한 곳은 모두 l을 통해 그래프로 저장해둔다. 백조가 그 곳을 방문하게 된다면 서로 이어질 수 있다는 뜻이기 때문에 저장해두었다.
+
+### B-3. 출력
+
+```py
+ans = 0
+
+while True:
+    if find_swan():
+        print(ans)
+        exit()
+    melt()
+    swan, next_swan = next_swan, swan
+    water, ice = ice, water
+    ans += 1
+```
+
+find_swan이 참이면 ans를 출력하고 끝낸다. 그리고 각 큐들을 서로 스왑한다.
+
+# 총평
+
+BFS에서 시간 복잡도와 공간 복잡도의 중요성을 알았다. 이전까지 BFS를 풀면서 복잡도를 생각 안 하면서 풀었었는데, 이번 기회에 BFS에서 복잡도를 줄여야 하는 이유를 알게 되었다. 조금만 코드를 수정해주면 불필요한 수행을 줄여서 복잡도를 크게 줄일 수 있기 때문이다.
+
+문제는 쉬웠으나, 복잡도를 줄이는 것이 어려웠다. 또한, 자료구조를 고려하는 것도 도움이 많이 되었다. 개인적으로 정말 좋은 문제인 것같다.
+
+그리고, 완성된 코드 없이 푼 플래티넘 문제라서 너무 기뻤다. :)))
+
+![3197](https://user-images.githubusercontent.com/83271772/160236956-7e1858dd-6dda-4162-a7c4-5ce138e010de.PNG)
