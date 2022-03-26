@@ -1,0 +1,158 @@
+---
+layout: post
+title: "백준: 10830 행렬 제곱"
+excerpt: "Python, Divide & Conquer"
+date: 2022-03-26 22:29:00 +0900
+categories:
+  - Baekjoon
+tags:
+  - Divide & Conquer
+---
+
+- [문제](#문제)
+- [입력](#입력)
+- [출력](#출력)
+- [문제 풀이](#문제-풀이)
+  - [A. 아이디어](#a-아이디어)
+  - [B. 코드 분석](#b-코드-분석)
+    - [전체 코드](#전체-코드)
+    - [B-1. 준비](#b-1-준비)
+    - [B-2. 행렬 계산](#b-2-행렬-계산)
+    - [B-3. 분할](#b-3-분할)
+    - [B-4. 출력](#b-4-출력)
+- [총평](#총평)
+
+# 문제
+
+크기가 N*N인 행렬 A가 주어진다. 이때, A의 B제곱을 구하는 프로그램을 작성하시오. 수가 매우 커질 수 있으니, A^B의 각 원소를 1,000으로 나눈 나머지를 출력한다.
+
+# 입력
+
+첫째 줄에 행렬의 크기 N과 B가 주어진다. (2 ≤ N ≤  5, 1 ≤ B ≤ 100,000,000,000)
+
+둘째 줄부터 N개의 줄에 행렬의 각 원소가 주어진다. 행렬의 각 원소는 1,000보다 작거나 같은 자연수 또는 0이다.
+
+# 출력
+
+첫째 줄부터 N개의 줄에 걸쳐 행렬 A를 B제곱한 결과를 출력한다.
+
+# 문제 풀이
+
+## A. 아이디어
+
+출처: https://velog.io/@ledcost/%EB%B0%B1%EC%A4%80-10830-%ED%8C%8C%EC%9D%B4%EC%8D%AC-%ED%96%89%EB%A0%AC-%EC%A0%9C%EA%B3%B1-%EA%B3%A8%EB%93%9C4-%EB%B6%84%ED%95%A0-%EC%A0%95%EB%B3%B5
+
+행렬의 기본적인 연산이 쓰였다. 행렬의 내적은 행과 열을 곱해주는 것이 특징이다. 제곱을 계산할 때는 홀수와 짝수를 나누어 두고, 제곱이 1일 때 혹은 제곱이 0일 때 계산을 하는 것이 특징이다. 이 문제도 그러하다. 또한, 메모리를 절약하기 위해 재귀 함수의 매개변수로 2차원 리스트를 설정하도록 한다.
+
+## B. 코드 분석
+
+### 전체 코드
+
+```py
+import sys
+input = sys.stdin.readline
+sys.setrecursionlimit(10 ** 6)
+
+N, B = map(int, input().split())
+A = [list(map(int, input().split())) for _ in range(N)]
+
+def mul(X, Y):
+    TMP = [[0] * N for _ in range(N)]
+
+    for i in range(N):
+        for j in range(N):
+            tmp = 0
+            for k in range(N):
+                tmp += X[i][k] * Y[k][j]
+            TMP[i][j] = tmp % 1000
+    
+    return TMP
+
+def solve(A, B):
+    if B == 1:
+        for i in range(N):
+            for j in range(N):
+                A[i][j] %= 1000
+        return A
+    
+    tmp = solve(A, B // 2)
+    if B % 2:
+        return mul(mul(tmp, tmp), A)
+    else:
+        return mul(tmp, tmp)
+
+ans = solve(A, B)
+for i in ans:
+    print(*i)
+```
+
+### B-1. 준비
+
+```py
+import sys
+input = sys.stdin.readline
+sys.setrecursionlimit(10 ** 6)
+
+N, B = map(int, input().split())
+A = [list(map(int, input().split())) for _ in range(N)]
+```
+입력이 많으므로 sys 모듈을 불러오고 행렬을 변수에 저장한다.
+
+### B-2. 행렬 계산
+
+```py
+def mul(X, Y):
+    TMP = [[0] * N for _ in range(N)]
+
+    for i in range(N):
+        for j in range(N):
+            tmp = 0
+            for k in range(N):
+                tmp += X[i][k] * Y[k][j]
+            TMP[i][j] = tmp % 1000
+    
+    return TMP
+```
+
+임시로 계산을 받아둘 2차원 리스트를 만들고, tmp 변수를 두어서 각 행렬내적을 계산하여 저장해준다. 값이 크면 1000으로 나눠야 하기 때문에 저장하기 전에 1000으로 나눠서 나머지를 저장한다.
+
+### B-3. 분할
+
+```py
+def solve(A, B):
+    if B == 1:
+        for i in range(N):
+            for j in range(N):
+                A[i][j] %= 1000
+        return A
+    
+    tmp = solve(A, B // 2)
+    if B % 2:
+        return mul(mul(tmp, tmp), A)
+    else:
+        return mul(tmp, tmp)
+```
+
+a는 행렬, B는 제곱수이다. 제곱수가 1이 되면 원래 행렬을 리턴한다.
+
+이후 제곱수가 홀수이면 반으로 나눠서 계산한 후 한 번 더 곱해주고, 짝수면 반으로 나눠서 그냥 곱해준다. 이 방법은 꽤 많이 쓰이므로 꼭 기억해두자
+
+### B-4. 출력
+
+```py
+ans = solve(A, B)
+for i in ans:
+    print(*i)
+```
+
+# 총평
+
+아까 분할 정복 문제를 풀었으면서 못 풀었다ㅠㅠ 분할 정복에서 제곱의 경우는 홀수와 짝수로 나눌 수 있는데, 그걸 생각하지 못했다.
+
+* 짝수면 $X^{k//2} * X^{k//2}$
+
+* 홀수면 $X^{k//2} * X^{k//2} * X$
+
+이런 식으로 분할하는 것을 꼭 기억하자.
+
+![10830](https://user-images.githubusercontent.com/83271772/160242867-a4aa1e66-1f1b-4a4f-b8cc-e3ef7088c043.PNG)
