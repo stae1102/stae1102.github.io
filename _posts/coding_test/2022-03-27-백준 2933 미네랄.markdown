@@ -1,0 +1,454 @@
+---
+layout: post
+title: "백준: 2933 미네랄"
+excerpt: "Python, BFS, Simulation"
+date: 2022-03-27 22:19:00 +0900
+categories:
+  - Baekjoon
+tags:
+  - BFS
+  - Simulation
+---
+
+# 문제
+
+창영과 상근은 한 동굴을 놓고 소유권을 주장하고 있다. 두 사람은 막대기를 서로에게 던지는 방법을 이용해 누구의 소유인지를 결정하기로 했다. 싸움은 동굴에서 벌어진다. 동굴에는 미네랄이 저장되어 있으며, 던진 막대기가 미네랄을 파괴할 수도 있다.
+
+동굴은 R행 C열로 나타낼 수 있으며, R×C칸으로 이루어져 있다. 각 칸은 비어있거나 미네랄을 포함하고 있으며, 네 방향 중 하나로 인접한 미네랄이 포함된 두 칸은 같은 클러스터이다.
+
+창영은 동굴의 왼쪽에 서있고, 상근은 오른쪽에 서있다. 두 사람은 턴을 번갈아가며 막대기를 던진다. 막대를 던지기 전에 던질 높이를 정해야 한다. 막대는 땅과 수평을 이루며 날아간다.
+
+막대가 날아가다가 미네랄을 만나면, 그 칸에 있는 미네랄은 모두 파괴되고 막대는 그 자리에서 이동을 멈춘다.
+
+미네랄이 파괴된 이후에 남은 클러스터가 분리될 수도 있다. 새롭게 생성된 클러스터가 떠 있는 경우에는 중력에 의해서 바닥으로 떨어지게 된다. 떨어지는 동안 클러스터의 모양은 변하지 않는다. 클러스터는 다른 클러스터나 땅을 만나기 전까지 게속해서 떨어진다. 클러스터는 다른 클러스터 위에 떨어질 수 있고, 그 이후에는 합쳐지게 된다.
+
+동굴에 있는 미네랄의 모양과 두 사람이 던진 막대의 높이가 주어진다. 모든 막대를 던지고 난 이후에 미네랄 모양을 구하는 프로그램을 작성하시오.
+
+# 입력
+
+첫째 줄에 동굴의 크기 R과 C가 주어진다. (1 ≤ R,C ≤ 100)
+
+다음 R개 줄에는 C개의 문자가 주어지며, '.'는 빈 칸, 'x'는 미네랄을 나타낸다.
+
+다음 줄에는 막대를 던진 횟수 N이 주어진다. (1 ≤ N ≤ 100)
+
+마지막 줄에는 막대를 던진 높이가 주어지며, 공백으로 구분되어져 있다. 모든 높이는 1과 R사이이며, 높이 1은 행렬의 가장 바닥, R은 가장 위를 의미한다. 첫 번째 막대는 왼쪽에서 오른쪽으로 던졌으며, 두 번째는 오른쪽에서 왼쪽으로, 이와 같은 식으로 번갈아가며 던진다.
+
+공중에 떠 있는 미네랄 클러스터는 없으며, 두 개 또는 그 이상의 클러스터가 동시에 떨어지는 경우도 없다. 클러스터가 떨어질 때, 그 클러스터 각 열의 맨 아래 부분 중 하나가 바닥 또는 미네랄 위로 떨어지는 입력만 주어진다.
+
+# 출력
+
+입력 형식과 같은 형식으로 미네랄 모양을 출력한다.
+
+# 예제 입력 
+
+```
+8 8
+........
+........
+...x.xx.
+...xxx..
+..xxx...
+..x.xxx.
+..x...x.
+.xxx..x.
+5
+6 6 4 3 1
+```
+
+# 예제 출력
+
+```
+........
+........
+........
+........
+.....x..
+..xxxx..
+..xxx.x.
+..xxxxx.
+```
+
+# 문제 풀이
+
+## A. 아이디어
+
+BFS와 구현, 시뮬레이션을 적절히 구사해야 하는 문제. 시뮬레이션에서는 벌어질 수 있는 상황들을 모두 생각한 다음에, 함수로 구현해서 풀이하는 것이 좋다.
+
+이 문제의 경우에는 1. 작대기를 던지는 상황 2. 미네랄을 검사하는 상황 3. 미네랄이 떨어지는 상황 이렇게 크게 세 가지로 나눌 수 있다.
+
+작대기를 날리면, 그 좌표를 통해 미네랄들을 검사하여 미네랄 뭉치가 땅에 닿아있는지 확인한다. 그 이후, 땅에 닿아있지 않다면 떨어질 수 있는 거리를 고려하여 쭉 떨어진다. 구현을 잘 하는 것이 중요하다.
+
+## B. 코드 분석
+
+### 개선 전 전체 코드
+
+```py
+from collections import deque
+import sys
+input = sys.stdin.readline
+
+R, C = map(int, input().split())
+
+graph = [list(input().rstrip()) for _ in range(R)]
+
+# 미네랄 체크
+def check(x, y):
+    if not (0 <= x < R and 0 <= y < C) or graph[x][y] == '.':
+        return []
+    q = deque([(x, y)])
+    visited = [[0] * C for _ in range(R)]
+    visited[x][y] = 1
+    mineral = [(x, y)]
+
+    while q:
+        x, y = q.popleft()
+        if graph[x][y] == '.':
+            continue
+        for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+            nx = x + dx; ny = y + dy
+            if nx >= R:
+                return []
+            if nx >= 0 and 0 <= ny < C and not visited[nx][ny]:
+                if graph[nx][ny] == 'x':
+                    visited[nx][ny] = 1
+                    q.append((nx, ny))
+                    mineral.append((nx, ny))
+
+    return mineral
+
+# 미네랄 떨어뜨리기
+def fall(arr):
+    MIN = 9887654321
+
+    for x, y in arr:
+        nx = x + 1 # 내려가면서 검사할 변수
+        while nx < R: # 0보다 크거나 같을 동안
+            if graph[nx][y] == 'x':
+                if (nx, y) not in arr:
+                    MIN = min(MIN, nx - x - 1)
+                    break
+            nx += 1
+        else: MIN = min(MIN, nx - x - 1)
+
+    arr.sort()
+    while arr:
+        x, y = arr.pop()
+        graph[x][y] = '.'
+        x += MIN
+        graph[x][y] = 'x'
+
+# 작대기 던지기
+def stick(k, drt):
+    if drt: # 방향이 오른쪽이면
+        for i in range(C - 1, -1, -1):
+            if graph[k][i] == 'x':
+                graph[k][i] = '.'
+                temp = check(k + 1, i) + check(k - 1, i) + check(k, i - 1)
+                fall(temp)
+                return
+
+    else:
+        for i in range(C):
+            if graph[k][i] == 'x':
+                graph[k][i] = '.'
+                temp = check(k + 1, i) + check(k - 1, i) + check(k, i + 1)
+                # print(temp)
+                fall(temp)
+                return
+
+n = int(input())
+sticks = list(map(int, input().split()))
+
+direction = False
+for i in sticks:
+    stick(R - i, direction)
+    direction = True if direction == False else False
+
+for i in graph:
+    print(''.join(i))
+```
+
+### 개선 후 전체 코드
+
+```py
+# https://www.acmicpc.net/source/36477990 참고하여 재제출
+
+from collections import deque
+import sys
+input = sys.stdin.readline
+
+R, C = map(int, input().split())
+
+graph = [list(input().rstrip()) for _ in range(R)]
+
+dx = [-1, 1, 0, 0]
+dy = [0, 0, -1, 1]
+
+# 작대기 던지기
+def stick(k, direction):
+    if not direction: # 왼 -> 오
+        for i in range(C):
+            if graph[k][i] == 'x':
+                graph[k][i] = '.'
+                return i
+
+    else: # 오 -> 왼
+        for i in range(C - 1, -1, -1):
+            if graph[k][i] == 'x':
+                graph[k][i] = '.'
+                return i
+    
+    # 헛방
+    return -1
+
+# 미네랄 체크
+def check(y, x):
+    if y == R:
+        return False
+    
+    visited = [[0] * C for _ in range(R)]
+    visited[y][x] = 1
+    q = deque([(y, x)])
+
+    while q:
+        y, x = q.popleft()
+        for i in range(4):
+            ny = y + dy[i]
+            nx = x + dx[i]
+            if ny == R: # 바닥에 닿으면 붙어있는 미네랄임
+                return False
+            if 0 <= ny < R and 0 <= nx < C and not visited[ny][nx]:
+                if graph[ny][nx] == 'x':
+                    visited[ny][nx] = 1
+                    q.append((ny, nx))
+    
+    return True
+
+# 미네랄 떨어뜨리기
+def fall(y, x):
+    cluster = [(y, x)]
+    graph[y][x] = '.'
+    q = deque(cluster)
+    visited = [[0] * C for _ in range(R)]
+    visited[y][x] = 1
+
+    while q:
+        y, x = q.popleft()
+        for i in range(4):
+            ny = y + dy[i]
+            nx = x + dx[i]
+            if 0 <= ny < R and 0 <= nx < C and not visited[ny][nx]:
+                if graph[ny][nx] == 'x':
+                    visited[ny][nx] = 1
+                    cluster.append((ny, nx))
+                    graph[ny][nx] = '.'
+                    q.append((ny, nx))
+    
+    drop = 0
+    lowest = False
+    while not lowest:
+        for y, x in cluster:
+            ny = y + drop
+            if ny == R or graph[ny][x] == 'x':
+                lowest = True
+                break
+        else:    
+            drop += 1
+    drop -= 1
+
+    for y, x in cluster:
+        ny = y + drop
+        graph[ny][x] = 'x'
+
+n = int(input())
+sticks = list(map(int, input().split()))
+
+direction = 0
+for i in sticks:
+    hit_y = R - i
+    hit_x = stick(hit_y, direction)
+    direction = (direction + 1) % 2
+
+    if hit_x == -1:
+        continue
+
+    # 작대기 던진 후 미네랄들을 검사하기 위해 큐에 저장
+    mineral = []
+    for i in range(4):
+        nx = hit_x + dx[i]
+        ny = hit_y + dy[i]
+        if 0 <= ny < R and 0 <= nx < C:
+            if graph[ny][nx] == 'x':
+                mineral.append((ny, nx))
+
+    # 미네랄 검사
+    for y, x in mineral:
+        if check(y, x):
+            fall(y, x)
+            break
+
+for i in graph:
+    print(''.join(i))
+```
+
+### B-1. 준비
+
+```py
+from collections import deque
+import sys
+input = sys.stdin.readline
+
+R, C = map(int, input().split())
+
+graph = [list(input().rstrip()) for _ in range(R)]
+
+dx = [-1, 1, 0, 0]
+dy = [0, 0, -1, 1]
+```
+
+### B-2. 작대기 던지기
+
+```py
+# 작대기 던지기
+def stick(k, direction):
+    if not direction: # 왼 -> 오
+        for i in range(C):
+            if graph[k][i] == 'x':
+                graph[k][i] = '.'
+                return i
+
+    else: # 오 -> 왼
+        for i in range(C - 1, -1, -1):
+            if graph[k][i] == 'x':
+                graph[k][i] = '.'
+                return i
+    
+    # 헛방
+    return -1
+```
+
+작대기가 순서에 따라 좌우가 달라지므로 방향을 고려하여 작대기를 던진다. 미네랄에 닿으면 그 부분을 없애주고 그 때의 좌표를 반환한다.
+
+아무 것도 닿지 않고 지나가면 -1(거짓)을 출력해준다.
+
+### B-3. 미네랄 검사하기
+
+```py
+# 미네랄 체크
+def check(y, x):
+    if y == R:
+        return False
+    
+    visited = [[0] * C for _ in range(R)]
+    visited[y][x] = 1
+    q = deque([(y, x)])
+
+    while q:
+        y, x = q.popleft()
+        for i in range(4):
+            ny = y + dy[i]
+            nx = x + dx[i]
+            if ny == R: # 바닥에 닿으면 붙어있는 미네랄임
+                return False
+            if 0 <= ny < R and 0 <= nx < C and not visited[ny][nx]:
+                if graph[ny][nx] == 'x':
+                    visited[ny][nx] = 1
+                    q.append((ny, nx))
+    
+    return True
+```
+
+미네랄이 떨어지려면 바닥에 닿는 미네랄이 없어야 한다. 상식적으로도 그렇다. 젠가에서 블럭을 쌓을 때, 모서리에 닿게 쌓으면 떨어지고, 블럭 면에 붙게 올려야 쌓을 수 있다. 따라서, 미네랄 뭉치가 바닥에 닿지 않는 경우에는 공중에 둥둥 떠있다는 의미이다.
+
+그렇지 않고 미네랄을 만날 때는 계속해서 탐색해준다. 그런 후, 바닥에 닿지 않아서 while문을 빠져나온다면 공중에 떠있는 미네랄이라고 간주하고 True를 반환한다.
+
+### B-4. 미네랄 떨어뜨리기
+
+```py
+# 미네랄 떨어뜨리기
+def fall(y, x):
+    cluster = [(y, x)]
+    graph[y][x] = '.'
+    q = deque(cluster)
+    visited = [[0] * C for _ in range(R)]
+    visited[y][x] = 1
+
+    while q:
+        y, x = q.popleft()
+        for i in range(4):
+            ny = y + dy[i]
+            nx = x + dx[i]
+            if 0 <= ny < R and 0 <= nx < C and not visited[ny][nx]:
+                if graph[ny][nx] == 'x':
+                    visited[ny][nx] = 1
+                    cluster.append((ny, nx))
+                    graph[ny][nx] = '.'
+                    q.append((ny, nx))
+    
+    drop = 0
+    lowest = False
+    while not lowest:
+        for y, x in cluster:
+            ny = y + drop
+            if ny == R or graph[ny][x] == 'x':
+                lowest = True
+                break
+        else:    
+            drop += 1
+    drop -= 1
+
+    for y, x in cluster:
+        ny = y + drop
+        graph[ny][x] = 'x'
+```
+
+작대기가 미네랄을 만났을 때의 좌표를 참고하여 미네랄을 검사한 후에, 공중에 떠있는 미네랄 뭉치를 포함하는 좌표를 함수에 입력한다.
+
+cluster는 미네랄을 담는 리스트이다. 미네랄의 좌표를 다 담아두고, 미네랄이 있던 곳들은 '.'으로 바꿔준다. 미네랄 뭉치 전체를 임시적으로 따로 떼어두는 것이다. while문을 통해서 모든 미네랄 뭉치를 저장하는 동시에 원래 미네랄 좌표의 값은 '.'으로 바꾼다.
+
+이후, 계속해서 cluster를 순회하며 바닥에 닿거나, 다른 미네랄에 닿는 최댓값을 탐색한다. 탐색한 이후에는 for문을 통해서 이동한 미네랄 좌표를 맵에 그려준다.
+
+### B-5. 함수 실행
+
+```py
+n = int(input())
+sticks = list(map(int, input().split()))
+
+direction = 0
+for i in sticks:
+    hit_y = R - i
+    hit_x = stick(hit_y, direction)
+    direction = (direction + 1) % 2
+
+    if hit_x == -1:
+        continue
+
+    # 작대기 던진 후 미네랄들을 검사하기 위해 큐에 저장
+    mineral = []
+    for i in range(4):
+        nx = hit_x + dx[i]
+        ny = hit_y + dy[i]
+        if 0 <= ny < R and 0 <= nx < C:
+            if graph[ny][nx] == 'x':
+                mineral.append((ny, nx))
+
+    # 미네랄 검사
+    for y, x in mineral:
+        if check(y, x):
+            fall(y, x)
+            break
+
+for i in graph:
+    print(''.join(i))
+```
+
+함수를 종합하여 실행한다. direction의 경우 홀수의 횟수에서는 왼쪽에서, 짝수의 횟수에서는 오른쪽에서 작대기가 날아오기 때문에 direction을 설정한다.
+
+# 총평
+
+답 안 보고 풀어서 2시간 ~ 2시간 30분 정도를 소요했다. 꽤 오류가 많아서 힘들었지만, 구현 능력을 조금 기를 수 있었던 것 같다.
+
+함수를 여러 개 설정하여 상황을 분류한 다음, 각각에 어울리는 BFS를 설정하여 풀이할 수 있었다. 단기간 성장 문제집에 나온 골드 2 문제였는데 아직 조금 벅차다. 문제를 다시 풀면서 어떻게 하면 복잡도를 줄일 수 있는지 더 공부하면 많이 성장할 수 있을 것같다.
+
+![2933](https://user-images.githubusercontent.com/83271772/160284296-68305429-24ad-4c02-8f83-b88115c4e691.PNG)
