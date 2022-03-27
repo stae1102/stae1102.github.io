@@ -302,6 +302,7 @@ DEPENDENCIES
   github-pages
   jekyll-minifier (= 0.1.10)
   jekyll-paginate
+  jekyll-sitemap
   jekyll-theme-so-simple
   webrick (~> 1.7)
 
