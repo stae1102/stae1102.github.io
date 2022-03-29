@@ -1,0 +1,194 @@
+---
+layout: post
+title: "백준: 6549 히스토그램에서 가장 큰 직사각형"
+excerpt: "Python, Stack, Segment_tree"
+date: 2022-03-29 16:21:00 +0900
+categories:
+  - Baekjoon
+tags:
+  - Stack
+  - Segment_tree
+---
+
+- [문제](#문제)
+- [입력](#입력)
+- [출력](#출력)
+- [예제 입력](#예제-입력)
+- [예제 출력](#예제-출력)
+- [문제 풀이](#문제-풀이)
+  - [A. 세그먼트 트리](#a-세그먼트-트리)
+    - [A.1 코드 분석](#a1-코드-분석)
+  - [B. 스택](#b-스택)
+    - [B.1 코드 분석](#b1-코드-분석)
+- [총평](#총평)
+
+# 문제
+
+히스토그램은 직사각형 여러 개가 아래쪽으로 정렬되어 있는 도형이다. 각 직사각형은 같은 너비를 가지고 있지만, 높이는 서로 다를 수도 있다. 예를 들어, 왼쪽 그림은 높이가 2, 1, 4, 5, 1, 3, 3이고 너비가 1인 직사각형으로 이루어진 히스토그램이다.
+
+<p align='center'><img src='https://www.acmicpc.net/upload/images/histogram.png'></p>
+
+히스토그램에서 가장 넓이가 큰 직사각형을 구하는 프로그램을 작성하시오.
+
+# 입력
+
+입력은 테스트 케이스 여러 개로 이루어져 있다. 각 테스트 케이스는 한 줄로 이루어져 있고, 직사각형의 수 n이 가장 처음으로 주어진다. (1 ≤ n ≤ 100,000) 그 다음 n개의 정수 $h_{1}$, ..., $h_{n}$ (0 ≤ $h_{i}$ ≤ 1,000,000,000)가 주어진다. 이 숫자들은 히스토그램에 있는 직사각형의 높이이며, 왼쪽부터 오른쪽까지 순서대로 주어진다. 모든 직사각형의 너비는 1이고, 입력의 마지막 줄에는 0이 하나 주어진다.
+
+# 출력
+
+각 테스트 케이스에 대해서, 히스토그램에서 가장 넓이가 큰 직사각형의 넓이를 출력한다.
+
+# 예제 입력
+
+```
+7 2 1 4 5 1 3 3
+4 1000 1000 1000 1000
+0
+```
+
+# 예제 출력
+
+```
+8
+4000
+```
+
+# 문제 풀이
+
+## A. 세그먼트 트리
+
+세그먼트 트리는 단어 그대로 부분 트리를 의미한다. 트리가 구간으로 분할되어서 각 범위를 담고 있고, 부모 노드 밑에 있는 자식 노드는 왼쪽과 오른쪽으로 두 개로 나뉜다. 모든 노드들이 다 나뉘어지면 트리가 완성된다. 트리는 왼쪽이 중간보다 작은 값들이, 오른쪽이 중간보다 큰 값들이 담긴다는 규칙에 따라서 자연스레, 트리의 높이만큼의 시간만 소요되기 때문에 완전탐색보다 더 빠르다. 무려 O(logN)!
+
+즉, 최솟값을 찾을 때 세그먼트 트리를 사용하면 O(logN)으로 찾아낼 수 있게 된다. 또한, 세그먼트 트리는 각 범위를 담고 있다. 그래서, 각 범위에서의 최솟값을 찾기에도 용이하다.
+
+https://my-coding-notes.tistory.com/99
+
+이번 히스토그램 문제에서도 각 범위 별로 최소 높이와 길이를 통해 사각형 넓이를 구해야 한다. 구간은 그 구간에서의 최솟값을 기준으로 두고 좌우로 분할한 다음 가장 큰 값을 반환해준다.
+
+### A.1 코드 분석
+
+```py
+import math
+import sys
+
+sys.setrecursionlimit(10**6)
+
+def init(left, right, node):
+    if left == right:
+        tree[node] = left
+    else:
+        mid = (left + right) // 2
+        init(left, mid, node*2)
+        init(mid + 1, right, node*2 + 1)
+        # node는 부모, node*2과 node*2 + 1는 각각 왼쪽, 오른쪽 자식 노드를 의미
+        
+        # 부모 노드에 더 작은 자식 노드 입력
+        if arr[tree[node*2+1]] < arr[tree[node*2]]:
+            tree[node] = tree[node*2+1]
+        else:
+            tree[node] = tree[node*2]
+
+# 구간 최솟값을 찾아주는 쿼리 함수
+def query(node, start, end, lidx, ridx):
+    # 주어진 범위가 전체 범위를 벗어난 경우
+    if lidx > end or ridx < start:
+        return -1
+    # 주어진 범위가 전체 범위 안에 포함되는 경우
+    if lidx <= start and end <= ridx:
+        return tree[node]
+    
+    mid = (start+end) // 2
+    left = query(node*2, start, mid, lidx, ridx)
+    right = query(node*2+1, mid+1, end, lidx, ridx)
+
+    # 한쪽 노드가 범위를 벗어난 경우 자연스럽게 반대쪽 노드가 선택됨
+    if left == -1:
+        return right
+    elif right == -1:
+        return left
+    else:
+        # 더 작은 값의 인덱스 선택
+        if arr[left] >= arr[right]:
+            return right
+        else:
+            return left
+
+def solve(start, end):
+    # 해당 구간 범위의 최솟값 인덱스를 구함
+    index = query(1, 0, len(arr) - 1, start, end)
+
+    # 단일 블럭인 경우
+    if end - start == 0:
+        return arr[index]
+
+    # v1 = 가장 낮은 블럭의 높이 * 히스토그램의 길이
+    v1, v2, v3 = arr[index] * (end-start+1), 0, 0
+
+    # 범위를 벗어나지 않는 경우 분할
+    if index-1 >= start:
+        v2 = solve(start, index - 1)
+    if index+1 <= end:
+        v3 = solve(index + 1, end)
+    
+    return max(v1, v2, v3)
+
+while True:
+    n, *arr = list(map(int, input().split()))
+    if n == 0:
+        break
+
+    tree = [0] * (pow(2, math.ceil(math.log2(n)) + 1)) # 트리의 노드 개수
+    
+    init(0, len(arr) - 1, 1)
+    print(solve(0, len(arr) - 1))
+```    
+
+## B. 스택
+
+이번 문제는 세그먼트로도 풀 수 있지만, 스택을 통해서도 풀 수 있다. for문으로 각 블럭들을 순회하고, 기준으로 잡은 블럭보다 이전 블럭이 더 높다면 계속해서 값들을 빼준다.
+
+### B.1 코드 분석
+
+```py
+from collections import deque
+import sys
+input = sys.stdin.readline
+
+while True:
+    n, *arr = map(int, input().split())
+    
+    if n == 0:
+        break
+
+    ans = -1
+    stack = deque()
+    for i in range(n):
+        while len(stack) != 0 and arr[stack[-1]] > arr[i]:
+            idx = stack.pop()
+
+            if len(stack) == 0:
+                width = i
+            else:
+                width = i - stack[-1] - 1
+
+            ans = max(ans, width * arr[idx])
+        stack.append(i)
+
+    while len(stack) != 0:
+        idx = stack.pop()
+
+        if len(stack) == 0:
+            width = n
+        else:
+            width = n - stack[-1] - 1
+
+        ans = max(ans, width * arr[idx])
+    
+    print(ans)
+```
+
+# 총평
+
+너무 어렵다! 배운 것은 많지만 그래도 너무 어렵다!! 세그먼트 트리을 알게 돼서 뿌듯하긴 하다.
+
+![6549](https://user-images.githubusercontent.com/83271772/160634071-f6ed52ca-a326-4e3f-9931-2a423d01b2e7.PNG)
