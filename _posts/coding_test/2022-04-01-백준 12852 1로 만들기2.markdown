@@ -1,0 +1,151 @@
+---
+layout: post
+title: "백준: 12852 1로 만들기2"
+excerpt: "Python, DP"
+date: 2022-04-01 18:56:00 +0900
+categories:
+  - Baekjoon
+tags:
+  - DP
+---
+
+# 문제
+
+정수 X에 사용할 수 있는 연산은 다음과 같이 세 가지 이다.
+
+1. X가 3으로 나누어 떨어지면, 3으로 나눈다.
+2. X가 2로 나누어 떨어지면, 2로 나눈다.
+3. 1을 뺀다.
+
+정수 N이 주어졌을 때, 위와 같은 연산 세 개를 적절히 사용해서 1을 만들려고 한다. 연산을 사용하는 횟수의 최솟값을 출력하시오.
+
+# 입력
+
+첫째 줄에 1보다 크거나 같고, $10^6$보다 작거나 같은 자연수 N이 주어진다.
+
+# 출력
+
+첫째 줄에 연산을 하는 횟수의 최솟값을 출력한다.
+
+둘째 줄에는 N을 1로 만드는 방법에 포함되어 있는 수를 공백으로 구분해서 순서대로 출력한다. 정답이 여러 가지인 경우에는 아무거나 출력한다.
+
+# 예제 입력
+
+```
+10
+```
+
+# 예제 출력
+
+```
+3
+10 9 3 1
+```
+
+# 문제 풀이
+
+## A. 접근
+
+1로 만들기는 대표적인 DP 문제였다. 이번 문제는 최솟값을 구해두고, 그것을 역으로 추적하는 것이라는 점이 특이했다. 어차피 DP가 구해졌으면, 그것을 역추적하는 것은 DP를 구했던 과정을 반대로 가져오면 된다.
+
+## B. 코드 분석
+
+### 전체 코드
+
+```py
+import sys
+input = sys.stdin.readline
+
+N = int(input())
+
+d = [0] * (N + 1)
+
+for i in range(2, N + 1):
+    d[i] = d[i-1] + 1
+    if i % 2 == 0:
+        d[i] = min(d[i], d[i // 2] + 1)
+    if i % 3 == 0:
+        d[i] = min(d[i], d[i // 3] + 1)
+
+arr = []
+ans = 0
+
+while N != 0:
+    arr.append(N)
+    temp = N
+    MIN = d[temp-1]
+    N = temp - 1
+
+    if temp % 2 == 0 and temp >= 2:
+        if MIN >= d[temp//2]:
+            MIN = d[temp//2]
+            N = temp // 2
+
+    if temp % 3 == 0 and temp >= 3:
+        if MIN >= d[temp//3]:
+            MIN = d[temp//3]
+            N = temp // 3
+
+    ans += 1
+
+print(ans - 1)
+print(*arr)
+```
+
+### B-1. 준비
+
+```py
+import sys
+input = sys.stdin.readline
+
+N = int(input())
+
+d = [0] * (N + 1)
+
+for i in range(2, N + 1):
+    d[i] = d[i-1] + 1
+    if i % 2 == 0:
+        d[i] = min(d[i], d[i // 2] + 1)
+    if i % 3 == 0:
+        d[i] = min(d[i], d[i // 3] + 1)
+
+arr = []
+ans = 0
+```
+
+먼저 1로 만들 수 있는 최소 경우를 미리 구해준다. arr와 ans는 결과를 담을 배열 리스트와 ans 카운트 변수이다. 사실 ans는 len(arr) - 1 로 대체할 수 있다.
+
+### B-2. 풀이
+
+```py
+while N != 0:
+    arr.append(N)
+    temp = N
+    MIN = d[temp-1]
+    N = temp - 1
+
+    if temp % 2 == 0 and temp >= 2:
+        if MIN >= d[temp//2]:
+            MIN = d[temp//2]
+            N = temp // 2
+
+    if temp % 3 == 0 and temp >= 3:
+        if MIN >= d[temp//3]:
+            MIN = d[temp//3]
+            N = temp // 3
+
+    ans += 1
+
+print(ans - 1)
+print(*arr)
+```
+
+temp로 N을 임시로 받아줄 변수를 만들어준다. 처음에는 N - 1을 하는 경우, 2로 나누어지며 temp가 2보다 크고, 2로 나누었을 때의 dp 테이블이 더 작다면 N을 //=2로 기록해준다. 3도 같은 방법으로 구한다.
+
+결과물을 출력해준다.
+
+# 총평
+
+오랜만에 DP에서 답같은 거 참고 안 하고 푼 것 같다. 뿌듯하다 흐흐
+
+![12852](https://user-images.githubusercontent.com/83271772/161242202-dc181176-475e-48bb-ba8f-75adeaeac4f9.PNG)
