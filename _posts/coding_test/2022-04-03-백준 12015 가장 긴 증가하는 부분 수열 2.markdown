@@ -1,0 +1,121 @@
+---
+layout: post
+title: "백준: 12015 가장 긴 증가하는 부분 수열 2"
+excerpt: "Python, DP"
+date: 2022-04-03 14:38:00 +0900
+categories:
+  - Baekjoon
+tags:
+  - DP
+---
+
+- [문제](#문제)
+- [입력](#입력)
+- [출력](#출력)
+- [예제 입력](#예제-입력)
+- [예제 출력](#예제-출력)
+- [문제 풀이](#문제-풀이)
+  - [A. 접근](#a-접근)
+  - [B. 코드 분석](#b-코드-분석)
+    - [전체 코드](#전체-코드)
+    - [B-1. 준비](#b-1-준비)
+    - [B-2. 풀이](#b-2-풀이)
+- [총평](#총평)
+
+# 문제
+
+수열 A가 주어졌을 때, 가장 긴 증가하는 부분 수열을 구하는 프로그램을 작성하시오.
+
+예를 들어, 수열 A = {10, 20, 10, 30, 20, 50} 인 경우에 가장 긴 증가하는 부분 수열은 A = {10, 20, 10, 30, 20, 50} 이고, 길이는 4이다.
+
+# 입력
+
+첫째 줄에 수열 A의 크기 N (1 ≤ N ≤ 1,000,000)이 주어진다.
+
+둘째 줄에는 수열 A를 이루고 있는 $A_i$가 주어진다. (1 ≤ $A_i$ ≤ 1,000,000)
+
+# 출력
+
+첫째 줄에 수열 A의 가장 긴 증가하는 부분 수열의 길이를 출력한다.
+
+# 예제 입력
+
+```
+6
+10 20 10 30 20 50
+```
+
+# 예제 출력
+
+```
+4
+```
+
+# 문제 풀이
+
+## A. 접근
+
+수열의 길이가 1,000,000개까지 주어질 수 있기 때문에 상당히 효율적으로 코드를 작성해야 한다. 이분탐색을 통해서 쉽게 해결할 수 있다.
+
+https://seohyun0120.tistory.com/entry/%EA%B0%80%EC%9E%A5-%EA%B8%B4-%EC%A6%9D%EA%B0%80%ED%95%98%EB%8A%94-%EB%B6%80%EB%B6%84-%EC%88%98%EC%97%B4LIS-%EC%99%84%EC%A0%84-%EC%A0%95%EB%B3%B5-%EB%B0%B1%EC%A4%80-%ED%8C%8C%EC%9D%B4%EC%8D%AC
+
+이분의 블로그를 참고하였다.
+
+## B. 코드 분석
+
+### 전체 코드
+
+```py
+import bisect
+import sys
+input = sys.stdin.readline
+
+n = int(input())
+arr = list(map(int, input().split()))
+dp = [arr[0]]
+
+for i in range(n):
+    if arr[i] > dp[-1]:
+        dp.append(arr[i])
+    else:
+        idx = bisect.bisect_left(dp, arr[i])
+        dp[idx] = arr[i]
+
+print(len(dp))
+```
+
+### B-1. 준비
+
+```py
+import bisect
+import sys
+input = sys.stdin.readline
+
+n = int(input())
+arr = list(map(int, input().split()))
+dp = [arr[0]]
+```
+
+이분 탐색을 쉽게 할 수 있는 bisect를 준비한다.
+
+### B-2. 풀이
+
+```py
+for i in range(n):
+    if arr[i] > dp[-1]:
+        dp.append(arr[i])
+    else:
+        idx = bisect.bisect_left(dp, arr[i])
+        dp[idx] = arr[i]
+
+print(len(dp))
+```
+매번 dp의 마지막 원소와 현재 배열의 원소를 비교하면서, 클 경우에는 수열이라고 판단하여 append 해주고, 아닐 경우에는 그 값과 비슷한 위치에 삽입해서 수열을 만들어준다.
+
+이때, 이분탐색의 시간 복잡도는 매번 탐색 범위가 반씩 줄어들기 때문에 O(logN)이며, 모든 수을 순회하기 때문에 총 시간 복잡도는 O(NlogN) 이다.
+
+# 총평
+
+bisect 짱~
+
+![12015](https://user-images.githubusercontent.com/83271772/161413719-e802c5a3-ff12-4057-9ce9-ce98bc9064b2.PNG)
