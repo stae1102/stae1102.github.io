@@ -1,0 +1,62 @@
+---
+layout: post
+title: "[Pictoon 프로젝트] - 1. 기초 형태 구성"
+excerpt: "웹툰 기반 SNS 플랫폼"
+date: 2022-04-03 20:13:00 +0900
+categories:
+  - Pictoon
+tags:
+  - Node.js
+---
+
+# npm init
+
+먼저 패키지를 사용해야 하기 때문에 init으로 package.json을 만들었다. 노드를 사용하기 때문에 프레임워크로 express를 불러왔다. 기초적인 패키지들은 다음과 같다
+
+```
+"cookie-parser": "^1.4.6",
+"dotenv": "^16.0.0",
+"express": "^4.17.3",
+"express-session": "^1.17.2",
+"morgan": "^1.10.0",
+"pug": "^3.0.2"
+"nodemon": "^2.0.15"
+```
+
+* cookie-parser: 쿠키를 해석해 req.cookies 객체로 만들기 위해 사용
+* dotenv: .env 파일을 읽기 위해 사용
+* express: Node.js의 웹 프레임워크
+* express-session: cookie 노출을 막고 세션 구현하기 위해 사용
+* morgan: 추가적인 로그를 확인하기 위해 사용
+* pug: 템플릿 엔진으로 pug 사용(Nico가 더 선호한다고 해서 사용해봄)
+* nodemon: 서버 파일을 수정하면 재부팅을 위해 사용
+
+# 폴더 구조 
+
+토이 프로젝트에서 다들 이렇게 폴더 구조를 작성하시길래 따라해봤다.
+
+```
+📁Picktoon 
+├─📁public
+│   └─main.css
+├─📁routes
+│   └─index.js
+├─📁views
+│   ├─error.pug
+│   ├─layout.pug
+│   └─main.pug
+├─📃.env
+├─📃package.json
+├─📃package-lock.json
+└─📃server.js
+```
+
+오 ㅋㅋㅋ 좀 느낌 산다.
+
+# 서버 구동
+
+일단 서버가 작동할 포트를 설정하고 한 번 켜보기로 했다.
+
+server.js파일에 express랑 session 등을 임포트해준다.
+
+내일 교생이라 여기까지 쓰고 나중에 써야겠다
